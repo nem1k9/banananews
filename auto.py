@@ -95,11 +95,11 @@ def map_posts(m, feed):
             continue  # последняя карта → вместо неё пост с результатом матча
         W, L = (t1, t2) if w1 else (t2, t1)
         mp = bo3.MAPS.get(g["map_name"], g["map_name"].replace("de_", "").title())
-        lead = f"⚡ {tag(W['name'])} <b>{W['name']}</b> забирают {mp} — {g['winner_clan_score']}:{g['loser_clan_score']}"
+        lead = f"⚡ {tag(W['name'])} <b>{W['name']}</b> забирают {mp} {g['winner_clan_score']}:{g['loser_clan_score']}"
         score = f"{t1.get('name')} {s1}:{s2} {t2.get('name')}"
         wn, ln = NICK.get(W['name'], W['name']), NICK.get(L['name'], L['name'])
-        end = (f"🔥 — если {wn} закроют серию\n👀 — если {ln} утащат решающую" if (s1 if w1 else s2) > (s2 if w1 else s1)
-               else f"🔥 — если {wn} дожмут\n🤯 — если {ln} ответят")
+        end = (f"🔥 {wn} закроют серию\n👀 {ln} утащат решающую" if (s1 if w1 else s2) > (s2 if w1 else s1)
+               else f"🔥 {wn} дожмут\n🤯 {ln} ответят")
         text = f"{lead}\n\n<blockquote>{score} · {(d.get('tournament') or {}).get('name', '')}</blockquote>\n\n{end}"
         try:
             img = map_card(m["slug"], d, t1, t2, games[:g["number"]] if g["number"] <= len(games) else games, s1, s2, g["number"])
@@ -157,17 +157,17 @@ def post_result(m):
     W, L, sc = w["name"], l["name"], f"{w['score']}:{l['score']}"
     nick = NICK.get(W, W)
     if stage in ("Финал", "Гранд-финал"):
-        lead = f"🏆 {tag(W)} <b>{W}</b> — чемпионы {info['event']}!"
-        end = f"🏆 — если {nick} заслужили трофей\n🤔 — если ждал другого чемпиона"
+        lead = f"🏆 {tag(W)} <b>{W}</b> чемпионы {info['event']}!"
+        end = f"🏆 {nick} заслужили трофей\n🤔 Ждал другого чемпиона"
     elif abs(w["score"] - l["score"]) >= 2:
-        lead = f"💀 {tag(W)} <b>{W}</b> не оставили шансов {tag(L)} <b>{L}</b> — {sc}"
-        end = f"🔥 — если {nick} берут турнир\n😭 — если {L} пора что-то менять"
+        lead = f"💀 {tag(W)} <b>{W}</b> не оставили шансов {tag(L)} <b>{L}</b> {sc}"
+        end = f"🔥 {nick} берут турнир\n😭 {L} пора что-то менять"
     else:
-        lead = f"🔥 {tag(W)} <b>{W}</b> дожали {tag(L)} <b>{L}</b> — {sc}"
-        end = f"🔥 — если {nick} берут турнир\n🤡 — если {L} просто не повезло"
+        lead = f"🔥 {tag(W)} <b>{W}</b> дожали {tag(L)} <b>{L}</b> {sc}"
+        end = f"🔥 {nick} берут турнир\n🤡 {L} просто не повезло"
     detail = f"{info['event']}{' · ' + stage if stage else ''}"
     if best:
-        detail += f"\nMVP — {best['nick']}, {best['k']}/{best['d']}"
+        detail += f"\nMVP: {best['nick']}, {best['k']}/{best['d']}"
     send("album" if len(imgs) > 1 else "photo", imgs, f"{lead}\n\n<blockquote>{detail}</blockquote>\n\n{end}", key)
 
 
@@ -180,7 +180,7 @@ def post_poll(m, feed):
     if not t1 or not t2:
         return
     st = iso(m["start_utc"]).astimezone(MSK)
-    q = f"{t1} vs {t2} — кто победит? Старт в {st:%H:%M} МСК"
+    q = f"{t1} vs {t2}: кто победит? Старт в {st:%H:%M} МСК"
     if q[:40] in feed:
         return
     r = subprocess.run(["python3", os.path.join(ROOT, "tg.py"), "poll", "--question", q,

@@ -71,6 +71,12 @@ def send_html(fn, text):
     raise last
 
 
+def humanize(t):
+    """Без «нейросетевой» типографики: длинное/среднее тире → дефис, без «…» → три точки."""
+    t = re.sub(r"\s*[—–]\s*", " - ", t)
+    return t.replace("…", "...")
+
+
 def channel_html():
     """Публичная лента канала (последние ~20 постов) — общая «память» всех запусков."""
     try:
@@ -173,6 +179,7 @@ def main():
     if a.key and already(a.key, a.question if a.cmd == "poll" else None):
         sys.exit(f"skip: ключ {a.key} уже публиковался")
     text = open(a.file).read().strip() if a.file else ""
+    text = humanize(text)
     if a.cmd in ("text", "photo", "album") and not os.environ.get("TG_NO_TOPIC_CHECK"):
         # защита от одновременных запусков: разнести их во времени и сверить тему с только что вышедшими постами
         import random, time
@@ -201,8 +208,8 @@ def main():
             return api("sendMediaGroup", files=files, chat_id=CHAT, media=json.dumps(media))
         res = send_html(f, text)
     elif a.cmd == "poll":
-        q = emojify(a.question, custom=False)
-        data = dict(chat_id=CHAT, question=q, options=json.dumps([{"text": emojify(o, custom=False)} for o in a.option]),
+        q = humanize(emojify(a.question, custom=False))
+        data = dict(chat_id=CHAT, question=q, options=json.dumps([{"text": humanize(emojify(o, custom=False))} for o in a.option]),
                     is_anonymous=str(not a.public_votes).lower())
         if a.quiz is not None:
             data.update(type="quiz", correct_option_id=a.quiz, explanation=a.explanation)
