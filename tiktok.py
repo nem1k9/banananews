@@ -155,6 +155,10 @@ def publish(pages_dir):
     at = access_token()
     hdr = {"Authorization": f"Bearer {at}", "Content-Type": "application/json; charset=UTF-8"}
     log = posted_log(pages_dir)
+    try:
+        runlog = json.load(open(os.path.join(pages_dir, "tiktok", "last_runs.json")))
+    except Exception:
+        runlog = []
     for i, x in enumerate(pending):
         info = requests.post(f"{API}/post/publish/creator_info/query/", headers=hdr, timeout=30).json().get("data", {})
         levels = info.get("privacy_level_options") or ["SELF_ONLY"]
@@ -171,6 +175,9 @@ def publish(pages_dir):
             # мог дойти: помечаем как отправленный, чтобы не было дублей
             r = {"error": {"code": "uncertain", "message": str(type(e).__name__)}}
         err = (r.get("error") or {}).get("code")
+        runlog.append({"id": x["id"], "at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+                       "privacy": privacy, "privacy_options": levels, "response": r})
+        json.dump(runlog[-50:], open(os.path.join(pages_dir, "tiktok", "last_runs.json"), "w"), ensure_ascii=False, indent=1)
         if err and err not in ("ok", "uncertain"):
             print(f"TikTok отказал для поста {x['id']}: {r['error']}")
             if "spam" in err or "limit" in err or "frequency" in err:
