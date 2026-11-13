@@ -7,6 +7,7 @@
 ## 0. Подготовка и проверка нового
 ```bash
 git clone -q --depth 1 https://github.com/nem1k9/banananews /home/user/banananews && cd /home/user/banananews
+pip install -q -r requirements.txt 2>/dev/null || pip install -q --break-system-packages -r requirements.txt
 python3 monitor.py          # смотрит только то, что появилось с прошлого запуска по расписанию
 ```
 Если `NOTHING_NEW` — сразу закончи, без постов и без других проверок.
