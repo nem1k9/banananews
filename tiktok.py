@@ -148,7 +148,7 @@ def publish(pages_dir):
     desc = ("\n".join(f"▪️ {l}" for l in meta["leads"]) +
             "\n\nБольше новостей и счёт матчей в Telegram: @BananNewws\n#cs2 #counterstrike #киберспорт #cs2news #ксго")[:4000]
     body = {"post_info": {"title": title, "description": desc, "privacy_level": privacy,
-                          "disable_comment": False, "auto_add_music": True},
+                          "disable_comment": False, "auto_add_music": False},
             "source_info": {"source": "PULL_FROM_URL", "photo_cover_index": 0, "photo_images": urls},
             "post_mode": "DIRECT_POST", "media_type": "PHOTO"}
     r = requests.post(f"{API}/post/publish/content/init/", headers=hdr, json=body, timeout=60).json()
