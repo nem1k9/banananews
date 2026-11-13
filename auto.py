@@ -70,7 +70,7 @@ def send(kind, args, text, key):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "w").write(text)
     r = subprocess.run(["python3", os.path.join(ROOT, "tg.py"), kind, *args, "--file", path, "--key", key],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, env={**os.environ, "TG_NO_TOPIC_CHECK": "1"})
     _done.add(key)
     print((r.stdout.strip() or r.stderr.strip())[:200])
 

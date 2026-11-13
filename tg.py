@@ -173,6 +173,15 @@ def main():
     if a.key and already(a.key, a.question if a.cmd == "poll" else None):
         sys.exit(f"skip: ключ {a.key} уже публиковался")
     text = open(a.file).read().strip() if a.file else ""
+    if a.cmd in ("text", "photo", "album") and not os.environ.get("TG_NO_TOPIC_CHECK"):
+        # защита от одновременных запусков: разнести их во времени и сверить тему с только что вышедшими постами
+        import random, time
+        import monitor
+        time.sleep(random.uniform(5, 25))
+        mine = monitor.entities(re.sub(r"<[^>]+>", " ", text))
+        for p in monitor.channel_posts()[-10:]:
+            if monitor.similar(mine, monitor.entities(p)):
+                sys.exit("skip: в канале уже есть пост на эту тему")
     if a.key and a.cmd != "poll":
         text += key_tag(a.key)  # невидимая метка: по ней следующие запуски видят, что пост уже был
 
