@@ -2,7 +2,7 @@
 """Публикация в Telegram-канал. Токен: TELEGRAM_BOT_TOKEN, канал: TELEGRAM_CHANNEL (по умолчанию @BananNewws).
 
   python3 tg.py check                                       # проверить токен и права в канале
-  python3 tg.py seen <key>                                  # 0 = уже публиковали, 1 = нет
+  python3 tg.py seen <key> [--question "..."]               # печатает seen/new (смотрит ленту t.me/s/канала)
   python3 tg.py text  --file post.html --key K
   python3 tg.py photo card.png --file post.html --key K      # подпись до 1024 символов
   python3 tg.py album a.png b.png --file post.html --key K   # подпись к первому фото
@@ -12,7 +12,7 @@
 
 Текст поста: HTML (<b>, <i>, <a href>, <blockquote>, <tg-spoiler>). Метка {{Falcons}} заменяется на эмодзи команды.
 """
-import argparse, datetime as dt, json, os, re, sys
+import argparse, datetime as dt, html, json, os, re, sys
 import requests
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -69,6 +69,29 @@ def send_html(fn, text):
     raise last
 
 
+def channel_html():
+    """Публичная лента канала (последние ~20 постов) — общая «память» всех запусков."""
+    try:
+        return requests.get(f"https://t.me/s/{CHAT.lstrip('@')}", headers={"User-Agent": "Mozilla/5.0"}, timeout=20).text
+    except Exception:
+        return ""
+
+
+def key_tag(key):
+    return f'<a href="https://t.me/{CHAT.lstrip("@")}?k={key}">\u200b</a>'
+
+
+def already(key, question=None):
+    if any(x["key"] == key for x in state()):
+        return True
+    h = channel_html()
+    if f"?k={key}" in h:
+        return True
+    if question and html.escape(question[:60]) in h:
+        return True
+    return False
+
+
 def state():
     try:
         return json.load(open(STATE))
@@ -103,15 +126,18 @@ def main():
             print(st.get("custom_emoji_id"), st.get("emoji"))
         return
     if a.cmd == "seen":
-        sys.exit(0 if any(x["key"] == a.args[0] for x in state()) else 1)
+        hit = already(a.args[0], a.question)
+        print("seen" if hit else "new"); sys.exit(0 if hit else 1)
     if a.cmd == "check":
         me = api("getMe"); ch = api("getChat", chat_id=CHAT)
         mem = api("getChatMember", chat_id=CHAT, user_id=me["id"])
         print(f'бот @{me["username"]}, канал {ch.get("title")}, статус {mem["status"]}, может постить: {mem.get("can_post_messages")}')
         return
-    if a.key and any(x["key"] == a.key for x in state()):
+    if a.key and already(a.key, a.question if a.cmd == "poll" else None):
         sys.exit(f"skip: ключ {a.key} уже публиковался")
     text = open(a.file).read().strip() if a.file else ""
+    if a.key and a.cmd != "poll":
+        text += key_tag(a.key)  # невидимая метка: по ней следующие запуски видят, что пост уже был
 
     if a.cmd == "text":
         res = send_html(lambda t, m: api("sendMessage", chat_id=CHAT, text=t, parse_mode=m or "",

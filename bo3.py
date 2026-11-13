@@ -29,7 +29,7 @@ def day_list(kind, date, all_tiers):
         for m in tier["matches"]:
             if not all_tiers and m.get("tier") not in TOP_TIERS:
                 continue
-            out.append({"slug": m["slug"], "tier": m["tier"], "start_utc": m["start_date"],
+            out.append({"slug": m["slug"], "tier": m["tier"], "start_utc": m["start_date"], "end_utc": m.get("end_date"),
                         "score": f'{m.get("team1_score")}:{m.get("team2_score")}', "bo": m.get("bo_type")})
     return out
 
