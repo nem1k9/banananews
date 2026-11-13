@@ -4,7 +4,7 @@
   python3 monitor.py              # JSON с новым или строка NOTHING_NEW
   python3 monitor.py --hours 6    # окно вручную (например, для первого/пробного запуска)
 
-Расписание (МСК, минута :23) задано в SLOTS; окно = от прошлого слота до сейчас.
+Расписание (Киев, минута :23) задано в SLOTS; окно = от прошлого слота до сейчас.
 Разделы ответа:
   news      — свежие (≤6 ч) материалы о CS2 в окне; одна тема из разных источников склеена (поле also),
               темы, похожие на последние посты канала, выброшены
@@ -80,7 +80,7 @@ def rss(source, url, keep, start, max_age=MAX_NEWS_AGE):
             continue
         enc = it.find("enclosure")
         item = {"source": source, "title": re.sub(r"\s+-\s+[\w.]+\.(org|com|us|gg)$", "", html.unescape(it.findtext("title") or "").strip()),
-                "link": it.findtext("link") or "", "date_msk": d.astimezone(MSK).strftime("%H:%M"),
+                "link": it.findtext("link") or "", "date_kyiv": d.astimezone(MSK).strftime("%H:%M"),
                 "image": enc.attrib.get("url") if enc is not None else None,
                 "summary": re.sub(r"<[^>]+>", "", html.unescape(it.findtext("description") or ""))[:300]}
         if keep and not keep(item):
@@ -163,17 +163,17 @@ def main():
             for m in bo3.day_list("upcoming", str(d), False):
                 st = iso(m["start_utc"])
                 if st and lo < st <= hi and st - NOW <= POLL_MAX_LEAD:
-                    m["starts_msk"] = st.astimezone(MSK).strftime("%d.%m %H:%M")
+                    m["starts_kyiv"] = st.astimezone(MSK).strftime("%d.%m %H:%M")
                     m["starts_in_min"] = int((st - NOW).total_seconds() // 60)
                     upcoming.append(m)
         except Exception as e:
             print(f"warn: bo3 upcoming: {e}", file=sys.stderr)
 
     if not (news or finished or upcoming):
-        print(f"NOTHING_NEW (окно с {start.astimezone(MSK):%H:%M} МСК)")
+        print(f"NOTHING_NEW (окно с {start.astimezone(MSK):%H:%M} по Киеву)")
         return
-    print(json.dumps({"now_msk": NOW.astimezone(MSK).strftime("%Y-%m-%d %H:%M"),
-                      "window_from_msk": start.astimezone(MSK).strftime("%Y-%m-%d %H:%M"),
+    print(json.dumps({"now_kyiv": NOW.astimezone(MSK).strftime("%Y-%m-%d %H:%M"),
+                      "window_from_kyiv": start.astimezone(MSK).strftime("%Y-%m-%d %H:%M"),
                       "news": news, "finished": finished, "upcoming": upcoming}, ensure_ascii=False, indent=1))
 
 

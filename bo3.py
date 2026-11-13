@@ -10,7 +10,13 @@ import requests
 
 API = "https://api.bo3.gg/api"
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36"}
-MSK = dt.timezone(dt.timedelta(hours=3))
+from zoneinfo import ZoneInfo
+KYIV = ZoneInfo("Europe/Kyiv")
+MSK = KYIV  # историческое имя: всё время канала — киевское
+
+
+def utc_offset():
+    return int(dt.datetime.now(KYIV).utcoffset().total_seconds())
 TOP_TIERS = {"s", "a"}
 MAPS = {"de_dust2": "Dust2", "de_mirage": "Mirage", "de_inferno": "Inferno", "de_nuke": "Nuke", "de_ancient": "Ancient",
         "de_anubis": "Anubis", "de_vertigo": "Vertigo", "de_overpass": "Overpass", "de_train": "Train", "de_cache": "Cache"}
@@ -24,13 +30,13 @@ def get(path, **params):
 
 def live_list():
     """Матчи, которые идут прямо сейчас."""
-    d = get("v2/matches/live", utc_offset=10800, **{"filter[discipline_id][eq]": 1})["data"]
+    d = get("v2/matches/live", utc_offset=utc_offset(), **{"filter[discipline_id][eq]": 1})["data"]
     return [{"slug": m["slug"], "tier": m.get("tier"), "stars": m.get("stars") or 0, "start_utc": m.get("start_date"),
              "score": f'{m.get("team1_score")}:{m.get("team2_score")}', "bo": m.get("bo_type")} for m in d]
 
 
 def day_list(kind, date, all_tiers):
-    d = get(f"v2/matches/{kind}", date=date, utc_offset=10800, **{"filter[discipline_id][eq]": 1})["data"]
+    d = get(f"v2/matches/{kind}", date=date, utc_offset=utc_offset(), **{"filter[discipline_id][eq]": 1})["data"]
     out = []
     for tier in d.get("tiers", {}).values():
         for m in tier["matches"]:

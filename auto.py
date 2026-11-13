@@ -188,7 +188,7 @@ def post_poll(m, feed):
     if not t1 or not t2:
         return
     st = iso(m["start_utc"]).astimezone(MSK)
-    q = f"{t1} vs {t2}: кто победит? Старт в {st:%H:%M} МСК"
+    q = f"{t1} vs {t2}: кто победит? Старт в {st:%H:%M} по Киеву"
     if q[:40] in feed:
         return
     r = subprocess.run(["python3", os.path.join(ROOT, "tg.py"), "poll", "--question", q,
