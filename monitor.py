@@ -67,7 +67,7 @@ def iso(s):
     return dt.datetime.fromisoformat(s.replace("Z", "+00:00")) if s else None
 
 
-def rss(source, url, keep, start):
+def rss(source, url, keep, start, max_age=MAX_NEWS_AGE):
     out = []
     try:
         root = ET.fromstring(requests.get(url, headers=UA, timeout=25).content)
@@ -76,7 +76,7 @@ def rss(source, url, keep, start):
         return out
     for it in root.findall(".//item"):
         d = parse_date(it.findtext("pubDate") or "")
-        if not d or d <= max(start, NOW - MAX_NEWS_AGE) or d > NOW + dt.timedelta(minutes=5):
+        if not d or d <= max(start, NOW - max_age) or d > NOW + dt.timedelta(minutes=5):
             continue
         enc = it.find("enclosure")
         item = {"source": source, "title": re.sub(r"\s+-\s+[\w.]+\.(org|com|us|gg)$", "", html.unescape(it.findtext("title") or "").strip()),
@@ -143,7 +143,7 @@ def main():
 
     news = []
     for src, url, keep in FEEDS:
-        news += rss(src, url, keep, start)
+        news += rss(src, url, keep, start, dt.timedelta(hours=hours) if hours else MAX_NEWS_AGE)
     news = dedupe(news)
 
     finished, upcoming = [], []
