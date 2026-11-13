@@ -26,11 +26,28 @@ TEAM_EMOJI = False  # обычные эмодзи команд (🦅 ⚔️ …)
 def api(method, files=None, **data):
     if not TOKEN:
         sys.exit("нет TELEGRAM_BOT_TOKEN")
-    r = requests.post(f"https://api.telegram.org/bot{TOKEN}/{method}", data=data, files=files, timeout=60)
+    try:
+        r = requests.post(f"https://api.telegram.org/bot{TOKEN}/{method}", data=data, files=files, timeout=180)
+    except requests.exceptions.RequestException as e:
+        if method.startswith("send"):
+            # запрос мог дойти до Telegram: повторять нельзя, иначе будут дубли
+            sys.exit(f"UNCERTAIN: нет ответа от Telegram ({type(e).__name__}). Пост мог выйти. НЕ ПОВТОРЯЙ отправку.")
+        raise
     j = r.json()
     if not j.get("ok"):
         raise RuntimeError(f"{method}: {j.get('description')}")
     return j["result"]
+
+
+def jpeg(path):
+    """PNG-карточка → JPEG (в 3–5 раз меньше, отправка за секунды)."""
+    try:
+        from PIL import Image
+        out = os.path.splitext(path)[0] + ".jpg"
+        Image.open(path).convert("RGB").save(out, "JPEG", quality=90, optimize=True)
+        return out
+    except Exception:
+        return path
 
 
 def find_team(name):
@@ -197,12 +214,12 @@ def main():
                                          link_preview_options=json.dumps({"is_disabled": True})), text)
     elif a.cmd == "photo":
         def f(t, m):
-            with open(a.args[0], "rb") as fh:
+            with open(jpeg(a.args[0]), "rb") as fh:
                 return api("sendPhoto", files={"photo": fh}, chat_id=CHAT, caption=t, parse_mode=m or "")
         res = send_html(f, text)
     elif a.cmd == "album":
         def f(t, m):
-            files = {f"p{i}": open(p, "rb") for i, p in enumerate(a.args)}
+            files = {f"p{i}": open(jpeg(p), "rb") for i, p in enumerate(a.args)}
             media = [{"type": "photo", "media": f"attach://p{i}"} for i in range(len(a.args))]
             media[0].update({"caption": t, **({"parse_mode": m} if m else {})})
             return api("sendMediaGroup", files=files, chat_id=CHAT, media=json.dumps(media))
