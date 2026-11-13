@@ -20,6 +20,7 @@ STATE = os.path.join(ROOT, "state", "posted.json")
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 CHAT = os.environ.get("TELEGRAM_CHANNEL", "@BananNewws")
 EMOJI = json.load(open(os.path.join(ROOT, "emoji.json")))
+TEAM_EMOJI = False  # обычные эмодзи команд (🦅 ⚔️ …) выключены; кастомные (custom_id) работают всегда
 
 
 def api(method, files=None, **data):
@@ -46,11 +47,12 @@ def emojify(text, custom=True):
     def rep(m):
         t = find_team(m.group(1))
         if not t:
-            return "🎮"
+            return ""
         if custom and t.get("custom_id"):
             return f'<tg-emoji emoji-id="{t["custom_id"]}">{t["emoji"]}</tg-emoji>'
-        return t["emoji"]
-    return re.sub(r"\{\{(.+?)\}\}", rep, text)
+        return t["emoji"] if TEAM_EMOJI else ""
+    out = re.sub(r"\{\{(.+?)\}\}", rep, text)
+    return re.sub(r"(?m)^ +| {2,}", lambda m: "" if m.group(0).startswith(" ") and m.start() == 0 or m.group(0)[0] == " " and len(m.group(0)) == m.end() - m.start() and (m.start() == 0 or out[m.start() - 1] == "\n") else " ", out)
 
 
 def strip_custom(text):
