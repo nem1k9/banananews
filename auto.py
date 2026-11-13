@@ -5,7 +5,7 @@
   python3 auto.py --post           # один проход
   python3 auto.py --loop 19800     # проходы каждые 20 с, пока идут известные матчи (+15 мин), но не дольше N секунд
 
-Только известные матчи: турнир S/A-тира, или у матча ≥2 «звёзд» bo3.gg, или в нём команда из топ-30.
+Только матчи с популярными командами из teams.json (топ-сцена + известные СНГ тир-2).
 Повторы отсекаются по ленте канала (невидимые метки постов и текст вопросов опросов).
 """
 import contextlib, datetime as dt, io, json, os, random, subprocess, sys, time
@@ -42,18 +42,26 @@ def details(slug):
     return bo3.get(f"v1/matches/{slug}", **{"scope": "show-match", "with": "games,teams,tournament_deep,stage"})
 
 
+_T = json.load(open(os.path.join(ROOT, "teams.json")))
+POPULAR = {n.lower() for k in ("tier1", "cis_tier2") for n in _T[k]}
+
+
+def popular(name):
+    n = (name or "").lower().strip()
+    return n in POPULAR or any(n == p or n.startswith(p + " ") for p in POPULAR)
+
+
 def notable(m):
-    if m.get("tier") in ("s", "a") or (m.get("stars") or 0) >= 2:
-        return True
-    if m.get("tier") != "b":
+    """Постим только матчи, где играет популярная команда (teams.json) и турнир не тир-3."""
+    if m.get("tier") not in ("s", "a", "b"):
         return False
     if m["slug"] not in _rank_cache:
         try:
             d = details(m["slug"])
-            _rank_cache[m["slug"]] = min((d.get(t) or {}).get("rank") or 999 for t in ("team1", "team2"))
+            _rank_cache[m["slug"]] = any(popular((d.get(t) or {}).get("name")) for t in ("team1", "team2"))
         except Exception:
-            _rank_cache[m["slug"]] = 999
-    return _rank_cache[m["slug"]] <= TOP_RANK
+            _rank_cache[m["slug"]] = False
+    return _rank_cache[m["slug"]]
 
 
 def ru_stage(info):

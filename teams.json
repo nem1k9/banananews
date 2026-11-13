@@ -1,0 +1,10 @@
+{
+ "_comment": "Команды, про которые канал пишет. Матчи и новости про остальные команды пропускаются. Добавляйте/удаляйте по вкусу.",
+ "tier1": ["Vitality", "Natus Vincere", "NAVI", "Spirit", "Team Spirit", "MOUZ", "FaZe", "G2", "Falcons", "FURIA",
+           "Team Liquid", "Liquid", "Astralis", "Heroic", "The MongolZ", "Aurora", "Eternal Fire", "paiN", "MIBR",
+           "3DMAX", "Complexity", "Virtus.pro", "GamerLegion", "Fnatic", "NIP", "Ninjas in Pyjamas", "BIG", "ENCE",
+           "Cloud9", "Legacy", "FUT", "Wildcard", "TYLOO", "Lynn Vision", "M80", "NRG", "OG", "Monte", "B8"],
+ "cis_tier2": ["PARIVISION", "BetBoom", "BetBoom Team", "AMKAL", "1win", "Nemiga", "FORZE", "Passion UA",
+               "Spirit Academy", "NAVI Junior", "Natus Vincere Junior", "Virtus.pro Academy", "Inner Circle",
+               "Sashi", "HOTU", "Rebels", "Kinguin", "Team Nemesis", "ex-Cloud9", "Sangal"]
+}
