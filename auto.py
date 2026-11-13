@@ -17,8 +17,6 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 STAGES = {"final": "Финал", "grand final": "Гранд-финал", "semifinal": "Полуфинал", "semi-final": "Полуфинал",
           "quarterfinal": "Четвертьфинал", "quarter-final": "Четвертьфинал", "group": "Групповой этап",
           "playoff": "Плей-офф", "swiss": "Швейцарка", "stage": "Стадия"}
-HYPE = ["🔥", "⚡", "💥", "😱", "🤯", "👀"]
-QUESTIONS = ["Заслуженная победа? 🤔", "Кто был MVP по-вашему? 👇", "Ожидали такой результат? 👀", "Ваша оценка игры — в комменты 👇"]
 
 
 def iso(s):
@@ -78,20 +76,30 @@ def post_result(m):
         for p in pm["players"]:
             if not best or p["rating"] > best[0]["rating"]:
                 best = (p, pm["map"])
-    mvp_line = ""
     if best:
         p, mp = best
-        mvp_line = f"\n⭐ <b>{p['nick']}</b>: {p['k']}/{p['d']}, ADR {p['adr']} на {mp}"
         if p["rating"] >= 7.5 or p["k"] - p["d"] >= 10:
             render("player", json.load(open(os.path.join(out, "card_player.json"))), os.path.join(out, "player.png"))
             imgs.append(os.path.join(out, "player.png"))
 
-    maps = " · ".join(f"{x['name']} {x['s1']}:{x['s2']}" for x in info["maps"])
-    sweep = abs(t1["score"] - t2["score"]) >= 2
-    head = (f"{random.choice(HYPE)} {tag(w['name'])} <b>{w['name']}</b> "
-            f"{'без шансов для' if sweep else 'дожимают'} {tag(l['name'])} <b>{l['name']}</b> — {w['score']}:{l['score']}!")
     stage = ru_stage(info)
-    text = (f"{head}\n🏆 {info['event']}{' · ' + stage if stage else ''}\n🗺 {maps}{mvp_line}\n\n{random.choice(QUESTIONS)}")
+    w_first = w is t1  # счёт по картам — с точки зрения победителя
+    maps = ", ".join(f"{x['name']} {x['s1']}:{x['s2']}" if w_first else f"{x['name']} {x['s2']}:{x['s1']}" for x in info["maps"])
+    W, L = w["name"], l["name"]
+    if stage in ("Финал", "Гранд-финал"):
+        head = f"🏆 {W.upper()} — ЧЕМПИОНЫ {info['event'].upper()}"
+        end = random.choice([f"🔥 — Заслуженный трофей", "🤍 — Чемпионы!"])
+    elif abs(t1["score"] - t2["score"]) >= 2:
+        head = f"💀 {W.upper()} РАЗНОСЯТ {L.upper()} {w['score']}:{l['score']}"
+        end = random.choice([f"💀 — {L} есть над чем поработать", "🔥 — Без шансов", "🤍 — Кто следующий?"])
+    else:
+        head = f"🔥 {W.upper()} ДОЖИМАЮТ {L.upper()} {w['score']}:{l['score']}"
+        end = random.choice(["🔥 — Вот это был матч", "🤍 — Заслуженно", "👀 — Кто был лучшим?"])
+    ctx = f"{stage + ' ' if stage else ''}<b>{info['event']}</b>: {maps}."
+    if best:
+        p, mp = best
+        ctx += f" <b>{p['nick']}</b> — {p['k']}/{p['d']} и {p['adr']} ADR на {mp}."
+    text = f"<b>{head}</b>\n\n{ctx}\n\n{end}"
     path = os.path.join(out, "post.html")
     open(path, "w").write(text)
     cmd = ["python3", os.path.join(ROOT, "tg.py"), "album" if len(imgs) > 1 else "photo", *imgs,
