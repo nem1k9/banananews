@@ -97,8 +97,9 @@ def map_posts(m, feed):
         mp = bo3.MAPS.get(g["map_name"], g["map_name"].replace("de_", "").title())
         lead = f"⚡ {tag(W['name'])} <b>{W['name']}</b> забирают {mp} — {g['winner_clan_score']}:{g['loser_clan_score']}"
         score = f"{t1.get('name')} {s1}:{s2} {t2.get('name')}"
-        end = (f"🔥 — если {NICK.get(W['name'], W['name'])} закроют серию" if (s1 if w1 else s2) > (s2 if w1 else s1)
-               else f"👀 — если будет решающая карта")
+        wn, ln = NICK.get(W['name'], W['name']), NICK.get(L['name'], L['name'])
+        end = (f"🔥 — если {wn} закроют серию\n👀 — если {ln} утащат решающую" if (s1 if w1 else s2) > (s2 if w1 else s1)
+               else f"🔥 — если {wn} дожмут\n🤯 — если {ln} ответят")
         text = f"{lead}\n\n<blockquote>{score} · {(d.get('tournament') or {}).get('name', '')}</blockquote>\n\n{end}"
         try:
             img = map_card(m["slug"], d, t1, t2, games[:g["number"]] if g["number"] <= len(games) else games, s1, s2, g["number"])
@@ -156,13 +157,14 @@ def post_result(m):
     W, L, sc = w["name"], l["name"], f"{w['score']}:{l['score']}"
     nick = NICK.get(W, W)
     if stage in ("Финал", "Гранд-финал"):
-        lead, end = f"🏆 {tag(W)} <b>{W}</b> — чемпионы {info['event']}!", f"🏆 — если {nick} заслужили трофей"
+        lead = f"🏆 {tag(W)} <b>{W}</b> — чемпионы {info['event']}!"
+        end = f"🏆 — если {nick} заслужили трофей\n🤔 — если ждал другого чемпиона"
     elif abs(w["score"] - l["score"]) >= 2:
         lead = f"💀 {tag(W)} <b>{W}</b> не оставили шансов {tag(L)} <b>{L}</b> — {sc}"
-        end = random.choice([f"💀 — если {L} пора что-то менять", f"🔥 — если {nick} берут турнир"])
+        end = f"🔥 — если {nick} берут турнир\n😭 — если {L} пора что-то менять"
     else:
         lead = f"🔥 {tag(W)} <b>{W}</b> дожали {tag(L)} <b>{L}</b> — {sc}"
-        end = random.choice([f"🔥 — если {nick} берут турнир", "👍 — если это был лучший матч дня"])
+        end = f"🔥 — если {nick} берут турнир\n🤡 — если {L} просто не повезло"
     detail = f"{info['event']}{' · ' + stage if stage else ''}"
     if best:
         detail += f"\nMVP — {best['nick']}, {best['k']}/{best['d']}"

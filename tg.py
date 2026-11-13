@@ -101,6 +101,41 @@ def state():
         return []
 
 
+# эмодзи, которые Telegram разрешает ставить реакцией (стандартный набор)
+REACTIONS = ["👍", "👎", "❤", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "😱", "🤬", "😢", "🎉", "🤩", "🤮", "💩", "🙏", "👌",
+             "🕊", "🤡", "🥱", "🥴", "😍", "🐳", "❤‍🔥", "🌚", "🌭", "💯", "🤣", "⚡", "🍌", "🏆", "💔", "🤨", "😐",
+             "🍓", "🍾", "💋", "🖕", "😈", "😴", "😭", "🤓", "👻", "👨‍💻", "👀", "🎃", "🙈", "😇", "😨", "🤝", "✍",
+             "🤗", "🫡", "🎅", "🎄", "☃", "💅", "🤪", "🗿", "🆒", "💘", "🙉", "🦄", "😘", "💊", "🙊", "😎", "👾",
+             "🤷‍♂", "🤷", "🤷‍♀", "😡"]
+ALIASES = {"❤️": "❤", "🤍": "❤", "💀": "😭", "✍️": "✍", "☃️": "☃", "🕊️": "🕊"}
+
+
+def reaction_from(text):
+    """Эмодзи из концовки вида «👍 — если …» (последняя строка с « — »)."""
+    plain = re.sub(r"<[^>]+>", "", text)
+    lines = plain.strip().splitlines()
+    opts = []
+    for line in reversed(lines):  # блок «эмодзи — если …» в конце поста
+        m = re.match(r"\s*(\S+)\s+[—-]\s", line)
+        if not m:
+            break
+        opts.insert(0, m.group(1))
+    for e in opts:  # бот может поставить одну реакцию — первую подходящую
+        e = ALIASES.get(e, e).replace("\ufe0f", "")
+        if e in REACTIONS:
+            return e
+    return None
+
+
+def react(msg, emoji):
+    try:
+        api("setMessageReaction", chat_id=CHAT, message_id=msg["message_id"],
+            reaction=json.dumps([{"type": "emoji", "emoji": emoji}]))
+        print(f"reaction {emoji}")
+    except Exception as e:
+        print(f"warn: реакция не поставилась: {e}", file=sys.stderr)
+
+
 def remember(key, kind, text, res):
     s = state()
     msg = res[0] if isinstance(res, list) else res
@@ -164,6 +199,9 @@ def main():
             data.update(type="quiz", correct_option_id=a.quiz, explanation=a.explanation)
         res = api("sendPoll", **data); text = q
     remember(a.key or f"{a.cmd}-{dt.datetime.now().timestamp():.0f}", a.cmd, text, res)
+    emoji = reaction_from(text) if a.cmd != "poll" else None
+    if emoji:
+        react(res[0] if isinstance(res, list) else res, emoji)
 
 
 if __name__ == "__main__":
