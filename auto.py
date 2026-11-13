@@ -3,7 +3,7 @@
 
   python3 auto.py --check          # has_work=true|false: идёт/закончился/скоро начнётся известный матч
   python3 auto.py --post           # один проход
-  python3 auto.py --loop 270       # проходы каждые 40 с (пост выходит ~через минуту после конца карты/матча)
+  python3 auto.py --loop 19800     # проходы каждые 20 с, пока идут известные матчи (+15 мин), но не дольше N секунд
 
 Только известные матчи: турнир S/A-тира, или у матча ≥2 «звёзд» bo3.gg, или в нём команда из топ-30.
 Повторы отсекаются по ленте канала (невидимые метки постов и текст вопросов опросов).
@@ -15,7 +15,8 @@ MSK = bo3.MSK
 FINISHED_WINDOW = dt.timedelta(minutes=45)
 POLL_FROM, POLL_TO = dt.timedelta(minutes=60), dt.timedelta(minutes=150)  # опрос за 1–2.5 ч до начала
 TOP_RANK = 30
-STEP = 40
+STEP = 20
+TAIL = 15 * 60   # после конца последнего live-матча ещё 15 мин держим проверку (результат, следующий матч)
 ROOT = os.path.dirname(os.path.abspath(__file__))
 STAGES = {"grand final": "Гранд-финал", "final": "Финал", "semifinal": "Полуфинал", "semi-final": "Полуфинал",
           "quarterfinal": "Четвертьфинал", "quarter-final": "Четвертьфинал", "group": "Групповой этап",
@@ -211,10 +212,18 @@ def main():
             open(os.environ["GITHUB_OUTPUT"], "a").write(f"has_work={'true' if has else 'false'}\n")
         return
     if "--loop" in sys.argv:
-        until = time.time() + float(sys.argv[sys.argv.index("--loop") + 1])
-        while True:
-            one_pass()
-            if time.time() + STEP > until:
+        # держим задачу живой, пока идут известные матчи: без зависимости от задержек расписания GitHub
+        hard = time.time() + float(sys.argv[sys.argv.index("--loop") + 1])
+        last_live = time.time()
+        while time.time() + STEP < hard:
+            try:
+                live = one_pass()
+            except Exception as e:
+                print(f"warn: pass: {e}", file=sys.stderr)
+                live = [1]
+            if live:
+                last_live = time.time()
+            elif time.time() - last_live > TAIL:
                 break
             time.sleep(STEP)
         return

@@ -12,7 +12,7 @@ concurrency:
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 340
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHANNEL: "@BananNewws"
@@ -37,6 +37,6 @@ jobs:
         run: |
           npm i --no-save --silent playwright@1.48.2
           npx playwright install --with-deps chromium > /dev/null
-      # пока идут известные матчи — проверка каждые 40 с почти до следующего запуска
+      # пока идут известные матчи — задача не завершается и проверяет счёт каждые 20 с
       - if: steps.check.outputs.has_work == 'true'
-        run: python3 auto.py --loop 230
+        run: python3 -u auto.py --loop 19800
