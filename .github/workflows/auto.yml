@@ -1,0 +1,37 @@
+name: Автопостер (каждые 5 минут)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: autopost
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHANNEL: "@BananNewws"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests pillow
+      - id: check
+        run: python3 auto.py --check
+      - if: steps.check.outputs.has_work == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - if: steps.check.outputs.has_work == 'true'
+        run: |
+          npm i --no-save --silent playwright@1.48.2
+          npx playwright install --with-deps chromium > /dev/null
+          sudo apt-get install -y -qq fonts-noto-color-emoji > /dev/null
+      - if: steps.check.outputs.has_work == 'true'
+        run: python3 auto.py --post
