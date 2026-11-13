@@ -99,7 +99,33 @@ def map_posts(m, feed):
         score = f"{t1.get('name')} {s1}:{s2} {t2.get('name')}"
         end = (f"🔥 — если {NICK.get(W['name'], W['name'])} закроют серию" if (s1 if w1 else s2) > (s2 if w1 else s1)
                else f"👀 — если будет решающая карта")
-        send("text", [], f"{lead}\n\n<blockquote>{score} · {(d.get('tournament') or {}).get('name', '')}</blockquote>\n\n{end}", key)
+        text = f"{lead}\n\n<blockquote>{score} · {(d.get('tournament') or {}).get('name', '')}</blockquote>\n\n{end}"
+        try:
+            img = map_card(m["slug"], d, t1, t2, games[:g["number"]] if g["number"] <= len(games) else games, s1, s2, g["number"])
+            send("photo", [img], text, key)
+        except Exception as e:  # картинка не получилась — пост всё равно выходит, без задержки
+            print(f"warn: map card: {e}", file=sys.stderr)
+            send("text", [], text, key)
+
+
+def map_card(slug, d, t1, t2, played, s1, s2, n):
+    out = os.path.join(ROOT, "out", slug)
+    os.makedirs(out, exist_ok=True)
+    logos = {}
+    for i, t in ((1, t1), (2, t2)):
+        f = os.path.join(out, f"team{i}.png")
+        logos[i] = f if os.path.exists(f) else bo3.download(t.get("image_url"), out, f"team{i}")
+    maps = []
+    for g in played:
+        w1 = (g.get("winner_team_clan") or {}).get("team", {}).get("id") == t1.get("id")
+        a, b = (g["winner_clan_score"], g["loser_clan_score"]) if w1 else (g["loser_clan_score"], g["winner_clan_score"])
+        maps.append({"name": bo3.MAPS.get(g["map_name"], g["map_name"].replace("de_", "").title()), "s1": a, "s2": b})
+    card = {"event": (d.get("tournament") or {}).get("name", ""), "stage": f"После {n}-й карты", "bo": d.get("bo_type"),
+            "kind": "Live", "team1": {"name": t1.get("name"), "logo": logos[1], "score": s1},
+            "team2": {"name": t2.get("name"), "logo": logos[2], "score": s2}, "maps": maps}
+    path = os.path.join(out, f"map{n}.png")
+    render("match", card, path)
+    return path
 
 
 # ---------- результат матча ----------

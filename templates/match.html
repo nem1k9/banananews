@@ -23,8 +23,8 @@
 <div class="maps" id="maps"></div>
 <div class="bar"></div><div class="bottom"><div class="brand">БАНАН <b>NEWS</b></div><div class="kind" id="kind"></div></div>
 </div><script>
-const D=window.DATA, w=D.team1.score>D.team2.score?1:2;
-const team=(t,i)=>{const e=document.getElementById('t'+i);if(w!==i)e.classList.add('lose');e.innerHTML=`<div class="tl"><img src="${t.logo||''}"></div><div class="tn">${t.name}</div>`};
+const D=window.DATA, w=D.team1.score>D.team2.score?1:(D.team1.score<D.team2.score?2:0);
+const team=(t,i)=>{const e=document.getElementById("t"+i);if(w&&w!==i)e.classList.add("lose");e.innerHTML=`<div class="tl"><img src="${t.logo||''}"></div><div class="tn">${t.name}</div>`};
 team(D.team1,1);team(D.team2,2);
 ev.textContent=D.event;st.textContent=D.stage||'';bo.textContent=D.bo?('BO'+D.bo):'';kind.textContent=D.kind||'Результат';
 sc.innerHTML=`<span class="${w==1?'w':''}">${D.team1.score}</span><span class="d">:</span><span class="${w==2?'w':''}">${D.team2.score}</span>`;
