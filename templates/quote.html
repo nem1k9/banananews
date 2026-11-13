@@ -20,5 +20,5 @@ const D=window.DATA;ev.textContent=D.event||'CS2';nm.textContent=D.person.nick;r
 tx.textContent=D.quote;kind.textContent=D.kind||'Цитата';ph.src=D.person.photo||'../assets/avatar.png';
 bg.style.backgroundImage=`url("${D.background||D.person.photo||''}")`;
 if(D.person.role) tx.style.top="720px";
-let fs=40;while(tx.scrollHeight>520&&fs>26){fs-=2;tx.style.fontSize=fs+'px'}
+document.fonts.ready.then(()=>{let fs=40;while(tx.scrollHeight>520&&fs>26){fs-=2;tx.style.fontSize=fs+'px'}});
 </script></body></html>

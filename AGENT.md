@@ -35,7 +35,7 @@ node render.js player out/<slug>/card_player.json out/<slug>/player.png
 node render.js quote  out/q.json out/q.png
 node render.js news   out/n.json out/n.png
 ```
-Форматы JSON — см. `examples/`. Поля `stage` переводи на русский («Четвертьфинал», «Финал», «Групповой этап»). Для `quote`/`news` фото игрока бери из bo3.gg (`https://api.bo3.gg/api/v1/players/<slug>` → `image_url`, скачай через `python3 -c "import bo3;print(bo3.download(url,'out','ph'))"`). В `news.title` слова в `*звёздочках*` подсвечиваются жёлтым. Посмотри на результат (Read png) перед отправкой: текст не должен вылезать за края.
+Форматы JSON — см. `examples/`. Поля `stage` переводи на русский («Четвертьфинал», «Финал», «Групповой этап»). Для `quote`/`news` фото игрока бери из bo3.gg (`https://api.bo3.gg/api/v1/players/<slug>` → `image_url`, скачай через `python3 -c "import bo3;print(bo3.download(url,'out','ph'))"`). В `news.title` слова в `*звёздочках*` подсвечиваются жёлтым. Если у новости нет фото (`image`), обязательно передай `logos` — логотип(ы) команд (`team1`/`team2` из `bo3.py match`, или `image_url` команды из `https://api.bo3.gg/api/v1/teams/<slug>`); два логотипа рисуются как «A VS B». Без фото и логотипов ставится большой знак канала. Посмотри на результат (Read png) перед отправкой: текст не должен вылезать за края.
 
 ## 4. Стиль текста поста
 Как у топовых CS-каналов: коротко, эмоционально, с эмодзи.

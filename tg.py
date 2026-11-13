@@ -8,6 +8,7 @@
   python3 tg.py album a.png b.png --file post.html --key K   # подпись к первому фото
   python3 tg.py poll --question "..." -o "A" -o "B" [--quiz 0 --explanation "..."] --key K
   python3 tg.py emoji "Falcons"                              # эмодзи команды для текста
+  python3 tg.py pack <имя_пака>                               # ID кастомных эмодзи из пака t.me/addemoji/<имя>
 
 Текст поста: HTML (<b>, <i>, <a href>, <blockquote>, <tg-spoiler>). Метка {{Falcons}} заменяется на эмодзи команды.
 """
@@ -87,7 +88,7 @@ def remember(key, kind, text, res):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["check", "seen", "text", "photo", "album", "poll", "emoji"])
+    ap.add_argument("cmd", choices=["check", "seen", "text", "photo", "album", "poll", "emoji", "pack"])
     ap.add_argument("args", nargs="*")
     ap.add_argument("--file"); ap.add_argument("--key")
     ap.add_argument("--question"); ap.add_argument("-o", "--option", action="append", default=[])
@@ -97,6 +98,10 @@ def main():
 
     if a.cmd == "emoji":
         t = find_team(" ".join(a.args)); print(t["emoji"] if t else "🎮"); return
+    if a.cmd == "pack":  # список кастомных эмодзи пака: t.me/addemoji/<имя>
+        for st in api("getStickerSet", name=a.args[0])["stickers"]:
+            print(st.get("custom_emoji_id"), st.get("emoji"))
+        return
     if a.cmd == "seen":
         sys.exit(0 if any(x["key"] == a.args[0] for x in state()) else 1)
     if a.cmd == "check":
