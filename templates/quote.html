@@ -1,24 +1,25 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
-.bgimg{position:absolute;inset:0;background-size:cover;background-position:center 20%;filter:blur(18px) brightness(.45) saturate(1.2);transform:scale(1.1)}
-.shade{position:absolute;inset:0;background:linear-gradient(180deg,#0b0b0d55 0%,#0b0b0d 72%)}
-.av{position:absolute;left:50%;top:230px;transform:translateX(-50%);width:300px;height:300px;border-radius:50%;border:6px solid var(--acc);overflow:hidden;background:var(--panel);z-index:3}
-.av img{width:100%;height:auto;margin-top:6px}
-.who{position:absolute;left:0;right:0;top:560px;display:flex;justify-content:center;align-items:center;gap:22px;z-index:3}
-.q{font:italic 900 90px Montserrat;color:var(--acc);line-height:.5;margin-top:24px}
-.name{font:900 36px Montserrat;text-transform:uppercase;background:#fff;color:#000;padding:8px 26px;transform:skewX(-14deg)}
-.name span{display:inline-block;transform:skewX(14deg)}
-.text{position:absolute;left:90px;right:90px;top:660px;font:600 40px/1.38 Inter;text-align:center;z-index:3}
-.role{position:absolute;left:0;right:0;top:650px;text-align:center;font:700 20px Inter;color:var(--mute);letter-spacing:3px;text-transform:uppercase;z-index:3}
-</style></head><body><div id="card" class="tall"><div class="bgimg" id="bg"></div><div class="shade"></div>
-<div class="top"><div class="event"><span id="ev"></span></div><img class="logo" src="../assets/logo.svg"></div>
-<div class="av"><img id="ph"></div>
-<div class="who"><div class="q">“</div><div class="name"><span id="nm"></span></div><div class="q">”</div></div>
-<div class="role" id="rl"></div><div class="text" id="tx"></div>
+.photo{position:absolute;left:-60px;bottom:110px;height:880px;z-index:2;-webkit-mask-image:linear-gradient(90deg,#000 55%,transparent 92%),linear-gradient(0deg,transparent 0,#000 12%);-webkit-mask-composite:source-in;mask-composite:intersect}
+.fade{position:absolute;left:380px;top:0;bottom:110px;width:220px;background:linear-gradient(90deg,transparent,var(--bg));z-index:3}
+.col{position:absolute;left:500px;right:56px;top:170px;bottom:150px;z-index:4;display:flex;flex-direction:column;justify-content:center}
+.qmark{display:flex;gap:10px;margin-bottom:28px}
+.qmark i{width:18px;height:58px;background:#fff;transform:skewX(-18deg)}
+.qmark i:nth-child(2){background:var(--acc)}
+.text{font:900 60px/1.04 Montserrat;text-transform:uppercase;letter-spacing:-.5px}
+.who{margin-top:32px;font:900 28px Montserrat;text-transform:uppercase;letter-spacing:1px}
+.who b{color:var(--acc);font-weight:900}
+.logo-tl{position:absolute;top:44px;left:56px;width:96px;height:80px;z-index:5}
+</style></head><body><div id="card"><div class="bgfx"></div>
+<img class="logo-tl" src="../assets/logo.svg">
+<img class="photo" id="ph">
+<div class="col"><div class="qmark"><i></i><i></i></div><div class="text" id="tx"></div><div class="who" id="who"></div></div>
 <div class="bar"></div><div class="bottom"><div class="brand">БАНАН <b>NEWS</b></div><div class="kind" id="kind"></div></div>
 </div><script>
-const D=window.DATA;ev.textContent=D.event||'CS2';nm.textContent=D.person.nick;rl.textContent=D.person.role||'';
-tx.textContent=D.quote;kind.textContent=D.kind||'Цитата';ph.src=D.person.photo||'../assets/avatar.png';
-bg.style.backgroundImage=`url("${D.background||D.person.photo||''}")`;
-if(D.person.role) tx.style.top="720px";
-document.fonts.ready.then(()=>{let fs=40;while(tx.scrollHeight>520&&fs>26){fs-=2;tx.style.fontSize=fs+'px'}});
+const D=window.DATA;kind.textContent=D.kind||'Цитата';
+ph.src=D.person.photo||'../assets/avatar.png';
+tx.textContent=D.quote;
+const role=D.person.role||'';
+who.innerHTML=D.person.nick+(role?' '+role.replace(/(\S+)$/,'<b>$1</b>'):'');
+document.fonts.ready.then(()=>{const box=document.querySelector('.col');let fs=60;
+ while(box.scrollHeight>box.clientHeight&&fs>30){fs-=2;tx.style.fontSize=fs+'px'}});
 </script></body></html>

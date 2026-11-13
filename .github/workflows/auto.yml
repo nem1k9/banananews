@@ -1,4 +1,4 @@
-name: Автопостер (каждые 5 минут)
+name: Автопостер (live-счёт, результаты, опросы)
 
 on:
   schedule:
@@ -12,7 +12,7 @@ concurrency:
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 9
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHANNEL: "@BananNewws"
@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -q requests pillow
+      - run: pip install -q -r requirements.txt
       - id: check
         run: python3 auto.py --check
       - if: steps.check.outputs.has_work == 'true'
@@ -29,9 +29,14 @@ jobs:
         with:
           node-version: "20"
       - if: steps.check.outputs.has_work == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-chromium-1.48.2
+      - if: steps.check.outputs.has_work == 'true'
         run: |
           npm i --no-save --silent playwright@1.48.2
           npx playwright install --with-deps chromium > /dev/null
-          sudo apt-get install -y -qq fonts-noto-color-emoji > /dev/null
+      # пока идут известные матчи — проверка каждые 40 с почти до следующего запуска
       - if: steps.check.outputs.has_work == 'true'
-        run: python3 auto.py --post
+        run: python3 auto.py --loop 230

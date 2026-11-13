@@ -1,22 +1,32 @@
 #!/usr/bin/env python3
-"""Быстрый автопостер без ИИ (GitHub Actions, каждые 5 минут).
+"""Быстрый автопостер без ИИ (GitHub Actions): live-счёт по картам, результат сразу после матча, опросы перед матчем.
 
-  python3 auto.py --check   # печатает has_work=true|false (для GitHub Actions), ничего не публикует
-  python3 auto.py --post    # публикует: результаты только что закончившихся матчей и опросы перед матчами
+  python3 auto.py --check          # has_work=true|false: идёт/закончился/скоро начнётся известный матч
+  python3 auto.py --post           # один проход
+  python3 auto.py --loop 270       # проходы каждые 40 с (пост выходит ~через минуту после конца карты/матча)
 
-Повторы отсекаются по ленте канала (невидимые метки постов и текст вопросов опросов), поэтому окно с запасом.
+Только известные матчи: турнир S/A-тира, или у матча ≥2 «звёзд» bo3.gg, или в нём команда из топ-30.
+Повторы отсекаются по ленте канала (невидимые метки постов и текст вопросов опросов).
 """
-import datetime as dt, json, os, random, subprocess, sys
+import contextlib, datetime as dt, io, json, os, random, subprocess, sys, time
 import bo3, tg
 
 MSK = bo3.MSK
-NOW = dt.datetime.now(dt.timezone.utc)
-FINISHED_WINDOW = dt.timedelta(minutes=45)     # матч закончился не раньше, чем 45 мин назад
+FINISHED_WINDOW = dt.timedelta(minutes=45)
 POLL_FROM, POLL_TO = dt.timedelta(minutes=60), dt.timedelta(minutes=150)  # опрос за 1–2.5 ч до начала
+TOP_RANK = 30
+STEP = 40
 ROOT = os.path.dirname(os.path.abspath(__file__))
-STAGES = {"final": "Финал", "grand final": "Гранд-финал", "semifinal": "Полуфинал", "semi-final": "Полуфинал",
+STAGES = {"grand final": "Гранд-финал", "final": "Финал", "semifinal": "Полуфинал", "semi-final": "Полуфинал",
           "quarterfinal": "Четвертьфинал", "quarter-final": "Четвертьфинал", "group": "Групповой этап",
-          "playoff": "Плей-офф", "swiss": "Швейцарка", "stage": "Стадия"}
+          "playoff": "Плей-офф", "swiss": "Швейцарская система"}
+NICK = {"Vitality": "Пчёлы", "Falcons": "Соколы", "Spirit": "Драконы", "MOUZ": "Мыши", "FURIA": "Пантеры",
+        "Natus Vincere": "NAVI", "Virtus.pro": "Медведи", "The MongolZ": "Монголы"}
+_rank_cache, _done = {}, set()
+
+
+def now():
+    return dt.datetime.now(dt.timezone.utc)
 
 
 def iso(s):
@@ -27,30 +37,41 @@ def tag(name):
     return "{{" + name + "}}"
 
 
-def find_work():
-    finished, upcoming = [], []
-    today = NOW.astimezone(MSK).date()
-    for d in (today - dt.timedelta(days=1), today):
-        for m in bo3.day_list("finished", str(d), False):
-            end = iso(m.get("end_utc"))
-            if end and NOW - FINISHED_WINDOW <= end <= NOW:
-                finished.append(m)
-    for d in (today, today + dt.timedelta(days=1)):
-        for m in bo3.day_list("upcoming", str(d), False):
-            st = iso(m["start_utc"])
-            if st and POLL_FROM <= st - NOW <= POLL_TO:
-                upcoming.append(m)
-    feed = tg.channel_html()
-    finished = [m for m in finished if f"?k=match-{m['slug']}" not in feed]
-    return finished, upcoming, feed
+def details(slug):
+    return bo3.get(f"v1/matches/{slug}", **{"scope": "show-match", "with": "games,teams,tournament_deep,stage"})
+
+
+def notable(m):
+    if m.get("tier") in ("s", "a") or (m.get("stars") or 0) >= 2:
+        return True
+    if m.get("tier") != "b":
+        return False
+    if m["slug"] not in _rank_cache:
+        try:
+            d = details(m["slug"])
+            _rank_cache[m["slug"]] = min((d.get(t) or {}).get("rank") or 999 for t in ("team1", "team2"))
+        except Exception:
+            _rank_cache[m["slug"]] = 999
+    return _rank_cache[m["slug"]] <= TOP_RANK
 
 
 def ru_stage(info):
-    s = (info.get("round") or info.get("stage") or "").lower()
+    s = " ".join(x for x in [(info.get("round") or {}).get("name") if isinstance(info.get("round"), dict) else info.get("round"),
+                             (info.get("stage") or {}).get("title") if isinstance(info.get("stage"), dict) else info.get("stage")] if x).lower()
     for k in sorted(STAGES, key=len, reverse=True):
         if k in s:
             return STAGES[k]
-    return info.get("stage") or ""
+    return ""
+
+
+def send(kind, args, text, key):
+    path = os.path.join(ROOT, "out", key + ".html")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    open(path, "w").write(text)
+    r = subprocess.run(["python3", os.path.join(ROOT, "tg.py"), kind, *args, "--file", path, "--key", key],
+                       capture_output=True, text=True)
+    _done.add(key)
+    print((r.stdout.strip() or r.stderr.strip())[:200])
 
 
 def render(tpl, data, path):
@@ -58,91 +79,146 @@ def render(tpl, data, path):
     subprocess.run(["node", os.path.join(ROOT, "render.js"), tpl, path + ".json", path], check=True, capture_output=True)
 
 
+# ---------- live: пост после каждой сыгранной карты (кроме последней — там будет результат) ----------
+def map_posts(m, feed):
+    d = details(m["slug"])
+    t1, t2 = d.get("team1") or {}, d.get("team2") or {}
+    games = sorted([g for g in d.get("games", []) if g.get("status") == "finished"], key=lambda g: g["number"])
+    s1 = s2 = 0
+    for g in games:
+        w1 = (g.get("winner_team_clan") or {}).get("team", {}).get("id") == t1.get("id")
+        s1, s2 = s1 + w1, s2 + (not w1)
+        key = f"map-{m['slug']}-{g['number']}"
+        need = (m.get("bo") or 1) // 2 + 1
+        if key in _done or f"?k={key}" in feed or max(s1, s2) >= need:
+            continue  # последняя карта → вместо неё пост с результатом матча
+        W, L = (t1, t2) if w1 else (t2, t1)
+        mp = bo3.MAPS.get(g["map_name"], g["map_name"].replace("de_", "").title())
+        lead = f"⚡ {tag(W['name'])} <b>{W['name']}</b> забирают {mp} — {g['winner_clan_score']}:{g['loser_clan_score']}"
+        score = f"{t1.get('name')} {s1}:{s2} {t2.get('name')}"
+        end = (f"🔥 — если {NICK.get(W['name'], W['name'])} закроют серию" if (s1 if w1 else s2) > (s2 if w1 else s1)
+               else f"👀 — если будет решающая карта")
+        send("text", [], f"{lead}\n\n<blockquote>{score} · {(d.get('tournament') or {}).get('name', '')}</blockquote>\n\n{end}", key)
+
+
+# ---------- результат матча ----------
 def post_result(m):
+    key = f"match-{m['slug']}"
     out = os.path.join(ROOT, "out", m["slug"])
-    import contextlib, io
     with contextlib.redirect_stdout(io.StringIO()):
         bo3.match(m["slug"], out)
     info = json.load(open(os.path.join(out, "match.json")))
     t1, t2 = info["team1"], info["team2"]
+    if t1["score"] == t2["score"]:
+        return
     w, l = (t1, t2) if t1["score"] > t2["score"] else (t2, t1)
+    stage = next((v for k, v in sorted(STAGES.items(), key=lambda x: -len(x[0])) if k in f"{info.get('round') or ''} {info.get('stage') or ''}".lower()), "")
     card = json.load(open(os.path.join(out, "card_match.json")))
-    card["stage"] = ru_stage(info)
+    card["stage"] = stage
     render("match", card, os.path.join(out, "match.png"))
     imgs = [os.path.join(out, "match.png")]
-
     best = None
     for pm in info["per_map"]:
         for p in pm["players"]:
-            if not best or p["rating"] > best[0]["rating"]:
-                best = (p, pm["map"])
-    if best:
-        p, mp = best
-        if p["rating"] >= 7.5 or p["k"] - p["d"] >= 10:
-            render("player", json.load(open(os.path.join(out, "card_player.json"))), os.path.join(out, "player.png"))
-            imgs.append(os.path.join(out, "player.png"))
+            if not best or p["rating"] > best["rating"]:
+                best = p
+    if best and (best["rating"] >= 7.5 or best["k"] - best["d"] >= 10) and os.path.exists(os.path.join(out, "card_player.json")):
+        render("player", json.load(open(os.path.join(out, "card_player.json"))), os.path.join(out, "player.png"))
+        imgs.append(os.path.join(out, "player.png"))
 
-    stage = ru_stage(info)
-    w_first = w is t1  # счёт по картам — с точки зрения победителя
-    maps = ", ".join(f"{x['name']} {x['s1']}:{x['s2']}" if w_first else f"{x['name']} {x['s2']}:{x['s1']}" for x in info["maps"])
-    W, L = w["name"], l["name"]
+    W, L, sc = w["name"], l["name"], f"{w['score']}:{l['score']}"
+    nick = NICK.get(W, W)
     if stage in ("Финал", "Гранд-финал"):
-        head = f"🏆 {W.upper()} — ЧЕМПИОНЫ {info['event'].upper()}"
-        end = random.choice([f"🔥 — Заслуженный трофей", "🤍 — Чемпионы!"])
-    elif abs(t1["score"] - t2["score"]) >= 2:
-        head = f"💀 {W.upper()} РАЗНОСЯТ {L.upper()} {w['score']}:{l['score']}"
-        end = random.choice([f"💀 — {L} есть над чем поработать", "🔥 — Без шансов", "🤍 — Кто следующий?"])
+        lead, end = f"🏆 {tag(W)} <b>{W}</b> — чемпионы {info['event']}!", f"🏆 — если {nick} заслужили трофей"
+    elif abs(w["score"] - l["score"]) >= 2:
+        lead = f"💀 {tag(W)} <b>{W}</b> не оставили шансов {tag(L)} <b>{L}</b> — {sc}"
+        end = random.choice([f"💀 — если {L} пора что-то менять", f"🔥 — если {nick} берут турнир"])
     else:
-        head = f"🔥 {W.upper()} ДОЖИМАЮТ {L.upper()} {w['score']}:{l['score']}"
-        end = random.choice(["🔥 — Вот это был матч", "🤍 — Заслуженно", "👀 — Кто был лучшим?"])
-    ctx = f"{stage + ' ' if stage else ''}<b>{info['event']}</b>: {maps}."
+        lead = f"🔥 {tag(W)} <b>{W}</b> дожали {tag(L)} <b>{L}</b> — {sc}"
+        end = random.choice([f"🔥 — если {nick} берут турнир", "👍 — если это был лучший матч дня"])
+    detail = f"{info['event']}{' · ' + stage if stage else ''}"
     if best:
-        p, mp = best
-        ctx += f" <b>{p['nick']}</b> — {p['k']}/{p['d']} и {p['adr']} ADR на {mp}."
-    text = f"<b>{head}</b>\n\n{ctx}\n\n{end}"
-    path = os.path.join(out, "post.html")
-    open(path, "w").write(text)
-    cmd = ["python3", os.path.join(ROOT, "tg.py"), "album" if len(imgs) > 1 else "photo", *imgs,
-           "--file", path, "--key", f"match-{m['slug']}"]
-    print(subprocess.run(cmd, capture_output=True, text=True).stdout.strip() or f"skip {m['slug']}")
+        detail += f"\nMVP — {best['nick']}, {best['k']}/{best['d']}"
+    send("album" if len(imgs) > 1 else "photo", imgs, f"{lead}\n\n<blockquote>{detail}</blockquote>\n\n{end}", key)
 
 
+# ---------- опрос перед матчем ----------
 def post_poll(m, feed):
-    info = bo3.get(f"v1/matches/{m['slug']}", **{"scope": "show-match", "with": "teams,tournament_deep"})
-    t1, t2 = (info.get("team1") or {}).get("name"), (info.get("team2") or {}).get("name")
+    key = f"poll-{m['slug']}"
+    _done.add(key)
+    d = details(m["slug"])
+    t1, t2 = (d.get("team1") or {}).get("name"), (d.get("team2") or {}).get("name")
     if not t1 or not t2:
         return
     st = iso(m["start_utc"]).astimezone(MSK)
-    q = f"{t1} vs {t2} в {st:%H:%M} МСК — кто победит?"
-    if q[:60] in feed:
+    q = f"{t1} vs {t2} — кто победит? Старт в {st:%H:%M} МСК"
+    if q[:40] in feed:
         return
-    ev = (info.get("tournament") or {}).get("name", "")
-    opts = [f"{tag(t1)} {t1}", f"{tag(t2)} {t2}"]
-    if m.get("bo") == 3:
-        opts = [f"{tag(t1)} {t1} 2:0", f"{tag(t1)} {t1} 2:1", f"{tag(t2)} {t2} 2:1", f"{tag(t2)} {t2} 2:0"]
-    cmd = ["python3", os.path.join(ROOT, "tg.py"), "poll", "--question", q[:250] + (f" ({ev})" if ev and len(q) + len(ev) < 280 else "")]
-    for o in opts:
-        cmd += ["-o", o]
-    cmd += ["--key", f"poll-{m['slug']}"]
-    print(subprocess.run(cmd, capture_output=True, text=True).stdout.strip() or f"skip poll {m['slug']}")
+    r = subprocess.run(["python3", os.path.join(ROOT, "tg.py"), "poll", "--question", q,
+                        "-o", f"{tag(t1)} {t1}", "-o", f"{tag(t2)} {t2}", "--key", key], capture_output=True, text=True)
+    print((r.stdout.strip() or r.stderr.strip())[:200])
+
+
+def scan():
+    t = now()
+    finished, upcoming, live = [], [], []
+    today = t.astimezone(MSK).date()
+    for d in (today - dt.timedelta(days=1), today):
+        for m in bo3.day_list("finished", str(d), True):
+            end = iso(m.get("end_utc"))
+            if end and t - FINISHED_WINDOW <= end <= t and notable(m):
+                finished.append(m)
+    for d in (today, today + dt.timedelta(days=1)):
+        for m in bo3.day_list("upcoming", str(d), True):
+            st = iso(m["start_utc"])
+            if st and POLL_FROM <= st - t <= POLL_TO and notable(m):
+                upcoming.append(m)
+    try:
+        live = [m for m in bo3.live_list() if notable(m)]
+    except Exception as e:
+        print(f"warn: live: {e}", file=sys.stderr)
+    return finished, upcoming, live
+
+
+def one_pass():
+    finished, upcoming, live = scan()
+    feed = tg.channel_html()
+    for m in upcoming:
+        if f"poll-{m['slug']}" not in _done:
+            post_poll(m, feed)
+    for m in live:
+        try:
+            map_posts(m, feed)
+        except Exception as e:
+            print(f"warn: map {m['slug']}: {e}", file=sys.stderr)
+    for m in finished:
+        if f"match-{m['slug']}" not in _done and f"?k=match-{m['slug']}" not in feed:
+            try:
+                post_result(m)
+            except Exception as e:
+                print(f"warn: result {m['slug']}: {e}", file=sys.stderr)
+    return live
 
 
 def main():
-    finished, upcoming, feed = find_work()
     if "--check" in sys.argv:
-        has = bool(finished or upcoming)
-        print(f"has_work={'true' if has else 'false'}")
+        finished, upcoming, live = scan()
+        feed = tg.channel_html()
+        finished = [m for m in finished if f"?k=match-{m['slug']}" not in feed]
+        has = bool(finished or upcoming or live)
+        print(f"has_work={'true' if has else 'false'} (live={len(live)}, finished={len(finished)}, polls={len(upcoming)})")
         if os.environ.get("GITHUB_OUTPUT"):
             open(os.environ["GITHUB_OUTPUT"], "a").write(f"has_work={'true' if has else 'false'}\n")
-        for m in finished:
-            print("finished:", m["slug"], file=sys.stderr)
-        for m in upcoming:
-            print("upcoming:", m["slug"], file=sys.stderr)
         return
-    for m in upcoming:
-        post_poll(m, feed)
-    for m in finished:
-        post_result(m)
+    if "--loop" in sys.argv:
+        until = time.time() + float(sys.argv[sys.argv.index("--loop") + 1])
+        while True:
+            one_pass()
+            if time.time() + STEP > until:
+                break
+            time.sleep(STEP)
+        return
+    one_pass()
 
 
 if __name__ == "__main__":
