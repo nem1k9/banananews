@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""TikTok: раз в день карусель из самых просматриваемых постов канала за сутки (запускается в GitHub Actions).
+"""TikTok: каждая новая новость канала (с картинкой) -> отдельный пост в TikTok, одна картинка + музыка от TikTok.
+Запускается в GitHub Actions каждый час; лимит DAILY_CAP постов в сутки (TikTok пускает ~15 через API).
 
-  python3 tiktok.py build  <pages_dir>      # выбрать посты, нарисовать вертикальные картинки в <pages_dir>/tiktok/<дата>/
+  python3 tiktok.py build  <pages_dir>      # найти новые посты канала, нарисовать вертикальные картинки в <pages_dir>/tiktok/
   python3 tiktok.py publish <pages_dir>     # опубликовать нарисованное (картинки уже на GitHub Pages)
   python3 tiktok.py auth <code>             # однократно: обменять код авторизации TikTok на токены
 
@@ -16,7 +17,9 @@ CHANNEL = os.environ.get("TELEGRAM_CHANNEL", "@BananNewws").lstrip("@")
 PAGES_URL = os.environ.get("PAGES_URL", "https://nem1k9.github.io/banananews").rstrip("/")
 REDIRECT_URI = f"{PAGES_URL}/tiktok-callback.html"
 STATE = os.path.join(ROOT, "tiktok_state.enc")
-TOP_N = 3
+DAILY_CAP = 12      # постов в TikTok в сутки (по Киеву)
+PER_RUN = 3         # за один запуск
+MAX_AGE_H = 6       # старые посты канала не берём
 API = "https://open.tiktokapis.com/v2"
 
 
@@ -54,36 +57,47 @@ def headline(lead):
     return t[:110] + ("..." if len(t) > 110 else "")
 
 
-def build(pages_dir):
-    since = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=24)
-    posts = [p for p in feed_posts() if p["time"] >= since]
-    top = sorted(posts, key=lambda p: (-p["views"], -p["id"]))[:TOP_N]
-    top.sort(key=lambda p: p["id"])
-    if not top:
-        print("NOTHING: за сутки нет постов с картинками")
+def kyiv_day(t=None):
+    from zoneinfo import ZoneInfo
+    return (t or dt.datetime.now(dt.timezone.utc)).astimezone(ZoneInfo("Europe/Kyiv")).strftime("%Y-%m-%d")
+
+
+def posted_log(pages_dir):
+    p = os.path.join(pages_dir, "tiktok", "posted.json")
+    try:
+        return json.load(open(p))
+    except Exception:
         return []
-    day = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d")
-    out_dir = os.path.join(pages_dir, "tiktok", day)
+
+
+def build(pages_dir):
+    log = posted_log(pages_dir)
+    done = {x["id"] for x in log}
+    today = sum(1 for x in log if x.get("day") == kyiv_day())
+    room = min(PER_RUN, DAILY_CAP - today)
+    since = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=MAX_AGE_H)
+    fresh = [p for p in feed_posts() if p["time"] >= since and p["id"] not in done]
+    pick = sorted(fresh, key=lambda p: (-p["views"], -p["id"]))[:max(room, 0)]
+    pick.sort(key=lambda p: p["id"])
+    out_dir = os.path.join(pages_dir, "tiktok")
     os.makedirs(out_dir, exist_ok=True)
-    files = []
-    for i, p in enumerate(top, 1):
-        src = os.path.join(out_dir, f"src{i}.jpg")
+    pending = []
+    from PIL import Image
+    for p in pick:
+        src, data, png = (os.path.join(out_dir, f"_{p['id']}.{e}") for e in ("jpg", "json", "png"))
         open(src, "wb").write(requests.get(p["photo"], timeout=30).content)
-        data = os.path.join(out_dir, f"s{i}.json")
         json.dump({"image": os.path.abspath(src), "title": headline(p["lead"]), "event": "CS2 NEWS"},
                   open(data, "w"), ensure_ascii=False)
-        png = os.path.join(out_dir, f"s{i}.png")
         subprocess.run(["node", os.path.join(ROOT, "render.js"), "tiktok", data, png], check=True, capture_output=True)
-        jpg = os.path.join(out_dir, f"{i}.jpg")
-        from PIL import Image
-        Image.open(png).convert("RGB").save(jpg, "JPEG", quality=90, optimize=True)
+        Image.open(png).convert("RGB").save(os.path.join(out_dir, f"{p['id']}.jpg"), "JPEG", quality=90, optimize=True)
         for f in (src, data, png):
             os.remove(f)
-        files.append(f"tiktok/{day}/{i}.jpg")
-    meta = {"day": day, "images": files, "leads": [headline(p["lead"]) for p in top], "posts": [p["id"] for p in top]}
-    json.dump(meta, open(os.path.join(out_dir, "meta.json"), "w"), ensure_ascii=False, indent=1)
-    print(json.dumps(meta, ensure_ascii=False, indent=1))
-    return files
+        pending.append({"id": p["id"], "image": f"tiktok/{p['id']}.jpg", "lead": headline(p["lead"])})
+    json.dump(pending, open(os.path.join(out_dir, "pending.json"), "w"), ensure_ascii=False, indent=1)
+    print(f"сегодня уже {today}/{DAILY_CAP}, новых к публикации: {len(pending)}")
+    for x in pending:
+        print(" ", x["id"], x["lead"])
+    return pending
 
 
 # ---------- токены ----------
@@ -126,36 +140,48 @@ def access_token():
 
 # ---------- публикация ----------
 def publish(pages_dir):
-    day = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d")
-    meta_path = os.path.join(pages_dir, "tiktok", day, "meta.json")
-    if not os.path.exists(meta_path):
-        print("NOTHING: сегодня нечего публиковать")
+    pend_path = os.path.join(pages_dir, "tiktok", "pending.json")
+    pending = json.load(open(pend_path)) if os.path.exists(pend_path) else []
+    if not pending:
+        print("NOTHING: новых постов для TikTok нет")
         return
-    meta = json.load(open(meta_path))
-    urls = [f"{PAGES_URL}/{f}" for f in meta["images"]]
+    urls = {x["id"]: f"{PAGES_URL}/{x['image']}" for x in pending}
     for _ in range(30):  # ждём, пока GitHub Pages выкатит картинки
-        if all(requests.head(u, timeout=15).status_code == 200 for u in urls):
+        if all(requests.head(u, timeout=15).status_code == 200 for u in urls.values()):
             break
         time.sleep(10)
     else:
         sys.exit("картинки так и не появились на GitHub Pages")
     at = access_token()
     hdr = {"Authorization": f"Bearer {at}", "Content-Type": "application/json; charset=UTF-8"}
-    info = requests.post(f"{API}/post/publish/creator_info/query/", headers=hdr, timeout=30).json().get("data", {})
-    levels = info.get("privacy_level_options") or ["SELF_ONLY"]
-    privacy = "PUBLIC_TO_EVERYONE" if "PUBLIC_TO_EVERYONE" in levels else levels[0]
-    title = "Главные новости CS2 за день 🍌"
-    desc = ("\n".join(f"▪️ {l}" for l in meta["leads"]) +
-            "\n\nБольше новостей и счёт матчей в Telegram: @BananNewws\n#cs2 #counterstrike #киберспорт #cs2news #ксго")[:4000]
-    body = {"post_info": {"title": title, "description": desc, "privacy_level": privacy,
-                          "disable_comment": False, "auto_add_music": False},
-            "source_info": {"source": "PULL_FROM_URL", "photo_cover_index": 0, "photo_images": urls},
-            "post_mode": "DIRECT_POST", "media_type": "PHOTO"}
-    r = requests.post(f"{API}/post/publish/content/init/", headers=hdr, json=body, timeout=60).json()
-    err = (r.get("error") or {}).get("code")
-    if err and err != "ok":
-        sys.exit(f"TikTok отказал: {r['error']}")
-    print(f"ok: карусель отправлена в TikTok ({len(urls)} фото, видимость {privacy}), publish_id={r.get('data', {}).get('publish_id')}")
+    log = posted_log(pages_dir)
+    for i, x in enumerate(pending):
+        info = requests.post(f"{API}/post/publish/creator_info/query/", headers=hdr, timeout=30).json().get("data", {})
+        levels = info.get("privacy_level_options") or ["SELF_ONLY"]
+        privacy = "PUBLIC_TO_EVERYONE" if "PUBLIC_TO_EVERYONE" in levels else levels[0]
+        desc = (f"{x['lead']}\n\nБольше новостей и счёт матчей в Telegram: @BananNewws 🍌\n"
+                "#cs2 #counterstrike #киберспорт #cs2news #ксго")[:4000]
+        body = {"post_info": {"title": x["lead"][:90], "description": desc, "privacy_level": privacy,
+                              "disable_comment": False, "auto_add_music": True},
+                "source_info": {"source": "PULL_FROM_URL", "photo_cover_index": 0, "photo_images": [urls[x["id"]]]},
+                "post_mode": "DIRECT_POST", "media_type": "PHOTO"}
+        try:
+            r = requests.post(f"{API}/post/publish/content/init/", headers=hdr, json=body, timeout=120).json()
+        except requests.exceptions.RequestException as e:
+            # мог дойти: помечаем как отправленный, чтобы не было дублей
+            r = {"error": {"code": "uncertain", "message": str(type(e).__name__)}}
+        err = (r.get("error") or {}).get("code")
+        if err and err not in ("ok", "uncertain"):
+            print(f"TikTok отказал для поста {x['id']}: {r['error']}")
+            if "spam" in err or "limit" in err or "frequency" in err:
+                break
+            continue
+        log.append({"id": x["id"], "day": kyiv_day(), "publish_id": (r.get("data") or {}).get("publish_id"), "privacy": privacy})
+        json.dump(log[-500:], open(os.path.join(pages_dir, "tiktok", "posted.json"), "w"), ensure_ascii=False, indent=0)
+        print(f"ok: пост {x['id']} -> TikTok ({privacy}){' [без ответа, считаем отправленным]' if err == 'uncertain' else ''}")
+        if i < len(pending) - 1:
+            time.sleep(90)  # не постим очередью: TikTok режет частые публикации
+    os.remove(pend_path)
 
 
 if __name__ == "__main__":
