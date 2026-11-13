@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+.teams{position:absolute;top:230px;left:56px;right:56px;display:flex;align-items:center;justify-content:space-between}
+.team{width:300px;display:flex;flex-direction:column;align-items:center;gap:22px}
+.tl{width:220px;height:220px;display:flex;align-items:center;justify-content:center;background:var(--panel);border:2px solid var(--line)}
+.tl img{max-width:160px;max-height:160px}
+.tn{font:900 40px Montserrat;text-transform:uppercase;text-align:center;line-height:1.05}
+.team.lose .tl img,.team.lose .tn{opacity:.45}
+.mid{display:flex;flex-direction:column;align-items:center;gap:18px}
+.stage{font:700 22px Inter;letter-spacing:3px;color:var(--mute);text-transform:uppercase}
+.score{font:italic 900 190px Montserrat;line-height:.9;display:flex;gap:30px;align-items:center}
+.score .w{color:var(--acc)} .score .d{font-size:110px;color:#555}
+.bo{font:900 22px Montserrat;background:#fff;color:#000;padding:6px 16px}
+.maps{position:absolute;left:56px;right:56px;top:600px;display:flex;gap:18px}
+.map{flex:1;height:200px;background:var(--panel);border:2px solid var(--line);display:flex;flex-direction:column;justify-content:space-between;padding:22px 24px;position:relative}
+.map .s{font:italic 900 62px Montserrat}
+.map .n{font:800 24px Montserrat;text-transform:uppercase;color:var(--mute);letter-spacing:2px}
+.map .win{position:absolute;right:20px;top:22px;width:62px;height:62px}
+.map .win img{max-width:62px;max-height:62px}
+.map.w2 .s .b,.map.w1 .s .a{color:var(--acc)}
+</style></head><body><div id="card"><div class="bgfx"></div>
+<div class="top"><div class="event"><span id="ev"></span></div><img class="logo" src="../assets/logo.svg"></div>
+<div class="teams"><div class="team" id="t1"></div><div class="mid"><div class="stage" id="st"></div><div class="score" id="sc"></div><div class="bo" id="bo"></div></div><div class="team" id="t2"></div></div>
+<div class="maps" id="maps"></div>
+<div class="bar"></div><div class="bottom"><div class="brand">БАНАН <b>NEWS</b></div><div class="kind" id="kind"></div></div>
+</div><script>
+const D=window.DATA, w=D.team1.score>D.team2.score?1:2;
+const team=(t,i)=>{const e=document.getElementById('t'+i);if(w!==i)e.classList.add('lose');e.innerHTML=`<div class="tl"><img src="${t.logo||''}"></div><div class="tn">${t.name}</div>`};
+team(D.team1,1);team(D.team2,2);
+ev.textContent=D.event;st.textContent=D.stage||'';bo.textContent=D.bo?('BO'+D.bo):'';kind.textContent=D.kind||'Результат';
+sc.innerHTML=`<span class="${w==1?'w':''}">${D.team1.score}</span><span class="d">:</span><span class="${w==2?'w':''}">${D.team2.score}</span>`;
+maps.innerHTML=(D.maps||[]).map(m=>`<div class="map w${m.s1>m.s2?1:2}"><div class="s"><span class="a">${m.s1}</span>:<span class="b">${m.s2}</span></div><div class="n">${m.name}</div><div class="win"><img src="${(m.s1>m.s2?D.team1:D.team2).logo||''}"></div></div>`).join('');
+if(!(D.maps||[]).length) maps.style.display='none';
+</script></body></html>

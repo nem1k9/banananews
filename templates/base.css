@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,600;0,800;0,900;1,900&family=Inter:wght@500;600;700&display=swap');
+:root{--bg:#0b0b0d;--panel:#16161a;--line:#2a2a31;--txt:#fff;--mute:#9a9aa5;--acc:#FFC928}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg)}
+#card{width:1080px;height:1080px;position:relative;overflow:hidden;background:var(--bg);color:var(--txt);font-family:Inter,sans-serif}
+#card.tall{height:1350px}
+/* фон: диагональная штриховка + свечение */
+.bgfx{position:absolute;inset:0;background:
+  radial-gradient(900px 600px at 50% 0%,#ffc92818,transparent 70%),
+  repeating-linear-gradient(-14deg,#ffffff05 0 2px,transparent 2px 28px)}
+/* шапка */
+.top{position:absolute;top:44px;left:56px;right:56px;display:flex;align-items:center;justify-content:space-between;z-index:5}
+.event{font:900 30px Montserrat;letter-spacing:1px;text-transform:uppercase;background:var(--acc);color:#000;padding:10px 22px;transform:skewX(-14deg)}
+.event span{display:inline-block;transform:skewX(14deg)}
+.logo{width:96px;height:80px}
+/* низ */
+.bottom{position:absolute;left:56px;right:56px;bottom:40px;display:flex;align-items:center;justify-content:space-between;z-index:5}
+.brand{font:900 26px Montserrat;letter-spacing:6px;color:#fff}
+.brand b{color:var(--acc)}
+.kind{font:700 20px Inter;letter-spacing:4px;color:var(--mute);text-transform:uppercase;border:2px solid var(--line);padding:8px 16px}
+.bar{position:absolute;left:0;right:0;bottom:110px;height:2px;background:var(--line)}
+.stripe{position:absolute;left:56px;bottom:52px;width:140px;height:24px;background:repeating-linear-gradient(90deg,#fff 0 3px,transparent 3px 7px);opacity:.35;display:none}

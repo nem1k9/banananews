@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+.img{position:absolute;inset:0;background-size:cover;background-position:center}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,#0b0b0d33 0%,#0b0b0d00 30%,#0b0b0dee 66%,#0b0b0d 100%)}
+.h{position:absolute;left:56px;right:56px;bottom:160px;font:italic 900 76px/1.0 Montserrat;text-transform:uppercase;z-index:3}
+.h em{font-style:inherit;color:var(--acc)}
+.tag{position:absolute;left:56px;font:800 24px Montserrat;background:#fff;color:#000;padding:6px 16px;z-index:3;text-transform:uppercase;letter-spacing:2px}
+</style></head><body><div id="card"><div class="bgfx"></div><div class="img" id="im"></div><div class="shade"></div>
+<div class="top"><div class="event"><span id="ev"></span></div><img class="logo" src="../assets/logo.svg"></div>
+<div class="tag" id="tg"></div><div class="h" id="hd"></div>
+<div class="bar"></div><div class="bottom"><div class="brand">БАНАН <b>NEWS</b></div><div class="kind" id="kind"></div></div>
+</div><script>
+const D=window.DATA;ev.textContent=D.event||'CS2';kind.textContent=D.kind||'Новость';
+if(D.image)im.style.backgroundImage=`url("${D.image}")`;
+hd.innerHTML=D.title.replace(/\*(.+?)\*/g,'<em>$1</em>');
+let fs=76;while(hd.offsetHeight>520&&fs>44){fs-=4;hd.style.fontSize=fs+'px'}
+if(D.tag){tg.textContent=D.tag;tg.style.bottom=(160+hd.offsetHeight+24)+'px'}else tg.remove();
+</script></body></html>

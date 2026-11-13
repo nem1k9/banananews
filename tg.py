@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+"""Публикация в Telegram-канал. Токен: TELEGRAM_BOT_TOKEN, канал: TELEGRAM_CHANNEL (по умолчанию @BananNewws).
+
+  python3 tg.py check                                       # проверить токен и права в канале
+  python3 tg.py seen <key>                                  # 0 = уже публиковали, 1 = нет
+  python3 tg.py text  --file post.html --key K
+  python3 tg.py photo card.png --file post.html --key K      # подпись до 1024 символов
+  python3 tg.py album a.png b.png --file post.html --key K   # подпись к первому фото
+  python3 tg.py poll --question "..." -o "A" -o "B" [--quiz 0 --explanation "..."] --key K
+  python3 tg.py emoji "Falcons"                              # эмодзи команды для текста
+
+Текст поста: HTML (<b>, <i>, <a href>, <blockquote>, <tg-spoiler>). Метка {{Falcons}} заменяется на эмодзи команды.
+"""
+import argparse, datetime as dt, json, os, re, sys
+import requests
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+STATE = os.path.join(ROOT, "state", "posted.json")
+TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+CHAT = os.environ.get("TELEGRAM_CHANNEL", "@BananNewws")
+EMOJI = json.load(open(os.path.join(ROOT, "emoji.json")))
+
+
+def api(method, files=None, **data):
+    if not TOKEN:
+        sys.exit("нет TELEGRAM_BOT_TOKEN")
+    r = requests.post(f"https://api.telegram.org/bot{TOKEN}/{method}", data=data, files=files, timeout=60)
+    j = r.json()
+    if not j.get("ok"):
+        raise RuntimeError(f"{method}: {j.get('description')}")
+    return j["result"]
+
+
+def find_team(name):
+    n = name.lower()
+    for k, v in EMOJI.items():
+        if k.startswith("_"):
+            continue
+        if n == k.lower() or n in [a.lower() for a in v.get("aliases", [])]:
+            return v
+    return None
+
+
+def emojify(text, custom=True):
+    def rep(m):
+        t = find_team(m.group(1))
+        if not t:
+            return "🎮"
+        if custom and t.get("custom_id"):
+            return f'<tg-emoji emoji-id="{t["custom_id"]}">{t["emoji"]}</tg-emoji>'
+        return t["emoji"]
+    return re.sub(r"\{\{(.+?)\}\}", rep, text)
+
+
+def strip_custom(text):
+    return re.sub(r'<tg-emoji emoji-id="\d+">(.+?)</tg-emoji>', r"\1", text)
+
+
+def send_html(fn, text):
+    """Отправка с откатом: кастомные эмодзи -> обычные -> без HTML."""
+    for variant, mode in ((emojify(text), "HTML"), (emojify(text, custom=False), "HTML"),
+                          (re.sub(r"<[^>]+>", "", emojify(text, custom=False)), None)):
+        try:
+            return fn(variant, mode)
+        except RuntimeError as e:
+            print(f"warn: {e}", file=sys.stderr)
+            last = e
+    raise last
+
+
+def state():
+    try:
+        return json.load(open(STATE))
+    except Exception:
+        return []
+
+
+def remember(key, kind, text, res):
+    s = state()
+    msg = res[0] if isinstance(res, list) else res
+    s.append({"key": key, "type": kind, "at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
+              "message_id": msg.get("message_id"), "text": re.sub(r"<[^>]+>", "", text)[:200]})
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    json.dump(s[-300:], open(STATE, "w"), ensure_ascii=False, indent=1)
+    print(f"ok: {kind} message_id={msg.get('message_id')} https://t.me/{CHAT.lstrip('@')}/{msg.get('message_id')}")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("cmd", choices=["check", "seen", "text", "photo", "album", "poll", "emoji"])
+    ap.add_argument("args", nargs="*")
+    ap.add_argument("--file"); ap.add_argument("--key")
+    ap.add_argument("--question"); ap.add_argument("-o", "--option", action="append", default=[])
+    ap.add_argument("--quiz", type=int); ap.add_argument("--explanation", default="")
+    ap.add_argument("--public-votes", action="store_true")
+    a = ap.parse_args()
+
+    if a.cmd == "emoji":
+        t = find_team(" ".join(a.args)); print(t["emoji"] if t else "🎮"); return
+    if a.cmd == "seen":
+        sys.exit(0 if any(x["key"] == a.args[0] for x in state()) else 1)
+    if a.cmd == "check":
+        me = api("getMe"); ch = api("getChat", chat_id=CHAT)
+        mem = api("getChatMember", chat_id=CHAT, user_id=me["id"])
+        print(f'бот @{me["username"]}, канал {ch.get("title")}, статус {mem["status"]}, может постить: {mem.get("can_post_messages")}')
+        return
+    if a.key and any(x["key"] == a.key for x in state()):
+        sys.exit(f"skip: ключ {a.key} уже публиковался")
+    text = open(a.file).read().strip() if a.file else ""
+
+    if a.cmd == "text":
+        res = send_html(lambda t, m: api("sendMessage", chat_id=CHAT, text=t, parse_mode=m or "",
+                                         link_preview_options=json.dumps({"is_disabled": True})), text)
+    elif a.cmd == "photo":
+        def f(t, m):
+            with open(a.args[0], "rb") as fh:
+                return api("sendPhoto", files={"photo": fh}, chat_id=CHAT, caption=t, parse_mode=m or "")
+        res = send_html(f, text)
+    elif a.cmd == "album":
+        def f(t, m):
+            files = {f"p{i}": open(p, "rb") for i, p in enumerate(a.args)}
+            media = [{"type": "photo", "media": f"attach://p{i}"} for i in range(len(a.args))]
+            media[0].update({"caption": t, **({"parse_mode": m} if m else {})})
+            return api("sendMediaGroup", files=files, chat_id=CHAT, media=json.dumps(media))
+        res = send_html(f, text)
+    elif a.cmd == "poll":
+        q = emojify(a.question, custom=False)
+        data = dict(chat_id=CHAT, question=q, options=json.dumps([{"text": emojify(o, custom=False)} for o in a.option]),
+                    is_anonymous=str(not a.public_votes).lower())
+        if a.quiz is not None:
+            data.update(type="quiz", correct_option_id=a.quiz, explanation=a.explanation)
+        res = api("sendPoll", **data); text = q
+    remember(a.key or f"{a.cmd}-{dt.datetime.now().timestamp():.0f}", a.cmd, text, res)
+
+
+if __name__ == "__main__":
+    main()
