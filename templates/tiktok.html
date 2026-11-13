@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+#card{width:1080px;height:1920px}
+.top{top:70px}
+.post{position:absolute;left:40px;right:40px;top:230px;display:flex;justify-content:center}
+.post img{width:1000px;border-radius:28px;box-shadow:0 30px 80px #000c;border:3px solid #ffffff14}
+.cta{position:absolute;left:60px;right:60px;bottom:150px;text-align:center}
+.cta .l1{font:800 44px Montserrat;color:#fff;letter-spacing:1px}
+.cta .l2{display:inline-block;margin-top:22px;font:italic 900 86px Montserrat;color:#000;background:var(--acc);padding:10px 40px;transform:skewX(-10deg)}
+.cta .l2 span{display:inline-block;transform:skewX(10deg)}
+.cta .l3{margin-top:26px;font:700 32px Inter;color:var(--mute)}
+.hl{position:absolute;left:60px;right:60px;font:900 60px/1.05 Montserrat;text-transform:uppercase;text-align:center}
+.hl em{font-style:normal;color:var(--acc)}
+</style></head><body><div id="card"><div class="bgfx"></div>
+<div class="top"><div class="event"><span id="ev">CS2 NEWS</span></div><img class="logo" src="../assets/logo.svg"></div>
+<div class="post"><img id="im"></div>
+<div class="hl" id="hl"></div>
+<div class="cta"><div class="l1">Больше новостей в Telegram</div><div class="l2"><span>@BananNewws</span></div><div class="l3">ссылка в профиле</div></div>
+</div><script>
+const D=window.DATA;im.src=D.image;if(D.event)ev.textContent=D.event;
+document.fonts.ready.then(()=>{im.decode().catch(()=>{}).finally(()=>{
+ const b=im.getBoundingClientRect().bottom;const room=1920-470-b;hl.style.top=(b+40)+'px';
+ if(D.title&&room>140){hl.innerHTML=D.title.replace(/\*(.+?)\*/g,'<em>$1</em>');let fs=60;
+  while(hl.offsetHeight>room-60&&fs>34){fs-=4;hl.style.fontSize=fs+'px'}}else hl.remove();});});
+</script></body></html>

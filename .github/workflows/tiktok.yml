@@ -1,0 +1,62 @@
+name: TikTok
+
+on:
+  schedule:
+    - cron: "4 17 * * *"   # ~19:00 по Киеву (зимой), 20:00 летом
+  workflow_dispatch:
+    inputs:
+      auth_code:
+        description: "Код с страницы tiktok-callback (только при подключении TikTok)"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tiktok
+  cancel-in-progress: false
+
+jobs:
+  tiktok:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_STATE_KEY: ${{ secrets.TIKTOK_STATE_KEY }}
+      TELEGRAM_CHANNEL: "@BananNewws"
+      PAGES_URL: "https://nem1k9.github.io/banananews"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q -r requirements.txt
+      - name: git identity
+        run: git config --global user.name "banan-bot" && git config --global user.email "banan-bot@users.noreply.github.com"
+
+      # однократное подключение TikTok
+      - if: github.event.inputs.auth_code != ''
+        env:
+          AUTH_CODE: ${{ github.event.inputs.auth_code }}
+        run: |
+          echo "::add-mask::$AUTH_CODE"
+          python3 tiktok.py auth "$AUTH_CODE"
+          git add tiktok_state.enc && git commit -qm "TikTok: подключён" && git push -q
+
+      # ежедневная карусель
+      - if: github.event.inputs.auth_code == ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - if: github.event.inputs.auth_code == ''
+        run: |
+          npm i --no-save --silent playwright@1.48.2
+          npx playwright install --with-deps chromium > /dev/null
+          git fetch -q origin gh-pages && git worktree add -q pages origin/gh-pages && (cd pages && git checkout -q -B gh-pages)
+          python3 tiktok.py build pages
+          cd pages && git add -A && (git diff --cached --quiet || (git commit -qm "TikTok: картинки $(date +%F)" && git push -q origin gh-pages))
+      - if: github.event.inputs.auth_code == ''
+        run: |
+          python3 tiktok.py publish pages
+          git add tiktok_state.enc && (git diff --cached --quiet || (git commit -qm "TikTok: обновлён токен" && git push -q))

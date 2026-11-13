@@ -1,0 +1,6 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>БАНАН NEWS · TikTok</title>
+<style>body{background:#0b0b0d;color:#fff;font:16px system-ui;max-width:560px;margin:40px auto;padding:0 16px}code{display:block;word-break:break-all;background:#1b1b20;padding:14px;border-radius:8px;margin:12px 0;font-size:15px}button{font:inherit;padding:12px;border-radius:8px;border:0;width:100%;background:#FFC928;font-weight:700}</style></head>
+<body><h2>Почти готово</h2><div id="o"></div>
+<script>const p=new URLSearchParams(location.search),c=p.get('code'),o=document.getElementById('o');
+if(c){o.innerHTML='<p>Скопируйте код и в течение 10 минут запустите на GitHub: <b>Actions → TikTok → Run workflow</b>, вставив его в поле <b>auth_code</b>.</p><code id="c"></code><button onclick="navigator.clipboard.writeText(document.getElementById(\'c\').textContent)">Скопировать код</button>';document.getElementById('c').textContent=c}
+else o.innerHTML='<p>Кода нет: '+(p.get('error_description')||p.get('error')||'вход не завершён')+'</p>'</script></body></html>
