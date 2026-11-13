@@ -199,9 +199,7 @@ def main():
             data.update(type="quiz", correct_option_id=a.quiz, explanation=a.explanation)
         res = api("sendPoll", **data); text = q
     remember(a.key or f"{a.cmd}-{dt.datetime.now().timestamp():.0f}", a.cmd, text, res)
-    emoji = reaction_from(text) if a.cmd != "poll" else None
-    if emoji:
-        react(res[0] if isinstance(res, list) else res, emoji)
+
 
 
 if __name__ == "__main__":
