@@ -70,6 +70,24 @@ def posted_log(pages_dir):
         return []
 
 
+def pick_new(pages_dir):
+    log = posted_log(pages_dir)
+    done = {x["id"] for x in log}
+    today = sum(1 for x in log if x.get("day") == kyiv_day())
+    room = min(PER_RUN, DAILY_CAP - today)
+    since = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=MAX_AGE_H)
+    fresh = [p for p in feed_posts() if p["time"] >= since and p["id"] not in done]
+    return sorted(fresh, key=lambda p: (-p["views"], -p["id"]))[:max(room, 0)], today
+
+
+def check(pages_dir):
+    pick, _ = pick_new(pages_dir)
+    has = "true" if pick else "false"
+    print(f"has_new={has} ({len(pick)})")
+    if os.environ.get("GITHUB_OUTPUT"):
+        open(os.environ["GITHUB_OUTPUT"], "a").write(f"has_new={has}\n")
+
+
 def build(pages_dir):
     log = posted_log(pages_dir)
     done = {x["id"] for x in log}
@@ -196,6 +214,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "build":
         build(sys.argv[2])
+    elif cmd == "check":
+        check(sys.argv[2])
     elif cmd == "publish":
         publish(sys.argv[2])
     elif cmd == "auth":
