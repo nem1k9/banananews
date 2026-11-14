@@ -70,6 +70,17 @@ def blur(path):
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", path, "-filter_complex", flt, "-c:a", "copy", "-crf", "20", out], check=True)
     os.replace(out, path)
 
+def compress(path, limit=10_000_000):
+    """До ~10 МБ одним проходом: 720p, h264 crf 27 с потолком битрейта под длительность, звук aac 128k
+    (иначе публичная лента Telegram не отдаёт файл, а TikTok-бот не может его забрать)."""
+    dur = max(dims(path)["duration"], 1)
+    vbr = max(int(limit * 8 / dur * 0.93) - 128_000, 400_000)
+    out = path[:-4] + "_c.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", path, "-vf", "scale=-2:'min(720,ih)'", "-c:v", "libx264", "-preset", "veryfast",
+                    "-crf", "27", "-maxrate", str(vbr), "-bufsize", str(vbr * 2), "-pix_fmt", "yuv420p",
+                    "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", out], check=True)
+    os.replace(out, path)
+
 def cmd_post(a):
     s = seen()
     if a.id in s: sys.exit("skip: уже разобран")
@@ -78,11 +89,8 @@ def cmd_post(a):
     if not e: sys.exit("нет такого клипа")
     s[a.id] = "posting"; save(s)  # помечаем заранее: повторов не будет, даже если отправка упадёт
     path = f"{D}/{a.id}.mp4"
-    for fmt in ("1080", "720", "480"):  # лучшее качество, которое влезает в лимит бота (50 МБ)
-        subprocess.run(["yt-dlp", "-q", "-f", fmt, "-o", path, "--force-overwrites", e["url"]], check=True, timeout=180)
-        if os.path.getsize(path) <= 49_000_000: break
-    else:
-        sys.exit("файл больше 49 МБ даже в 480p")
+    subprocess.run(["yt-dlp", "-q", "-f", "720/best[height<=720]/best", "-o", path, "--force-overwrites", e["url"]], check=True, timeout=180)
+    compress(path)
     if a.blur: blur(path)
     text = tg.humanize(open(a.file).read().strip()) + tg.key_tag("clip-" + a.id)
     def f(t, m):
