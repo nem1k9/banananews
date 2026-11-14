@@ -1,0 +1,36 @@
+[
+ {
+  "id": 18,
+  "at": "2026-11-14T09:01:19+00:00",
+  "privacy": "FOLLOWER_OF_CREATOR",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "error": {
+    "code": "unaudited_client_can_only_post_to_private_accounts",
+    "message": "Please review our integration guidelines at https://developers.tiktok.com/doc/content-sharing-guidelines/",
+    "log_id": "20261114170118780A08D1656011577AFE"
+   }
+  }
+ },
+ {
+  "id": 20,
+  "at": "2026-11-14T09:01:19+00:00",
+  "privacy": "FOLLOWER_OF_CREATOR",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "error": {
+    "code": "unaudited_client_can_only_post_to_private_accounts",
+    "message": "Please review our integration guidelines at https://developers.tiktok.com/doc/content-sharing-guidelines/",
+    "log_id": "202611141701196C5637B63AD30B5C0618"
+   }
+  }
+ }
+]
