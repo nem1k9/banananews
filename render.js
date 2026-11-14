@@ -8,4 +8,4 @@ const b=await chromium.launch();const p=await b.newPage({viewport:{width:1080,he
 await p.addInitScript(d=>{window.DATA=d},data);
 await p.goto('file://'+path.resolve(__dirname,'templates',tpl+'.html'));
 await p.evaluate(()=>document.fonts.ready);await p.waitForTimeout(400);
-await p.locator('#card').screenshot({path:out});await b.close();console.log(out)})();
+await p.locator('#card').screenshot({path:out,omitBackground:!!data.transparent});await b.close();console.log(out)})();

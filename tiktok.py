@@ -39,12 +39,14 @@ def feed_posts():
     for b in re.split(r'(?=<div class="tgme_widget_message_wrap)', h)[1:]:
         pid = re.search(r'data-post="[^/]+/(\d+)"', b)
         ph = re.findall(r"tgme_widget_message_photo_wrap[^>]*background-image:url\('([^']+)'\)", b)
+        vid = re.findall(r'<video[^>]*src="([^"]+)"', b)  # большие видео лента не отдаёт — их пропускаем
         t = re.search(r'<time datetime="([^"]+)"', b)
         txt = re.search(r'js-message_text[^>]*>(.*?)</div>', b, re.S)
-        if not (pid and ph and t and txt):
+        if not (pid and (ph or vid) and t and txt):
             continue
         text = html.unescape(re.sub(r"<[^>]+>", "", re.sub(r"<br\s*/?>", "\n", txt.group(1)))).strip()
-        out.append({"id": int(pid.group(1)), "photo": ph[0], "time": dt.datetime.fromisoformat(t.group(1)),
+        out.append({"id": int(pid.group(1)), "photo": ph[0] if ph else None, "video": html.unescape(vid[0]) if vid else None,
+                    "time": dt.datetime.fromisoformat(t.group(1)),
                     "views": views((re.search(r'tgme_widget_message_views">([^<]+)<', b) or [None, "0"])[1]),
                     "lead": text.split("\n")[0].strip()})
     return out
@@ -88,6 +90,24 @@ def check(pages_dir):
         open(os.environ["GITHUB_OUTPUT"], "a").write(f"has_new={has}\n")
 
 
+def build_clip(p):
+    """Клип канала -> вертикальное видео 1080x1920: размытый фон, клип по центру, заголовок и плашка канала. Звук клипа."""
+    work = os.path.join(ROOT, "out")
+    os.makedirs(work, exist_ok=True)
+    src, ov, ovj, dst = (os.path.join(work, f"clip_{p['id']}{e}") for e in (".src.mp4", ".ov.png", ".ov.json", ".mp4"))
+    open(src, "wb").write(requests.get(p["video"], timeout=120).content)
+    json.dump({"transparent": True, "title": headline(p["lead"])}, open(ovj, "w"), ensure_ascii=False)
+    subprocess.run(["node", os.path.join(ROOT, "render.js"), "tiktok_clip", ovj, ov], check=True, capture_output=True)
+    fc = ("[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30:3,eq=brightness=-0.25[bg];"
+          "[0:v]scale=1080:-2[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2[v1];[v1][1:v]overlay=0:0,format=yuv420p[v]")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", src, "-i", ov, "-filter_complex", fc, "-map", "[v]", "-map", "0:a?",
+                    "-t", "60", "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac", "-b:a", "160k",
+                    "-movflags", "+faststart", dst], check=True)
+    for f in (src, ov, ovj):
+        os.remove(f)
+    return {"id": p["id"], "video": dst, "lead": headline(p["lead"])}
+
+
 def build(pages_dir):
     log = posted_log(pages_dir)
     done = {x["id"] for x in log}
@@ -102,6 +122,12 @@ def build(pages_dir):
     pending = []
     from PIL import Image
     for p in pick:
+        if p.get("video"):
+            try:
+                pending.append(build_clip(p))
+            except Exception as e:
+                print(f"warn: клип {p['id']} не собрался: {e}")
+            continue
         src, data, png = (os.path.join(out_dir, f"_{p['id']}.{e}") for e in ("jpg", "json", "png"))
         open(src, "wb").write(requests.get(p["photo"], timeout=30).content)
         json.dump({"image": os.path.abspath(src), "title": headline(p["lead"]), "event": "CS2 NEWS"},
@@ -157,13 +183,31 @@ def access_token():
 
 
 # ---------- публикация ----------
+def post_video(hdr, path, caption, privacy):
+    """Видео через FILE_UPLOAD: файл уходит напрямую в TikTok."""
+    size = os.path.getsize(path)
+    body = {"post_info": {"title": caption[:2200], "privacy_level": privacy, "disable_comment": False,
+                          "disable_duet": False, "disable_stitch": False, "video_cover_timestamp_ms": 1000},
+            "source_info": {"source": "FILE_UPLOAD", "video_size": size, "chunk_size": size, "total_chunk_count": 1}}
+    r = requests.post(f"{API}/post/publish/video/init/", headers=hdr, json=body, timeout=60).json()
+    url = (r.get("data") or {}).get("upload_url")
+    if not url:
+        return r
+    with open(path, "rb") as fh:
+        up = requests.put(url, data=fh, headers={"Content-Type": "video/mp4", "Content-Length": str(size),
+                                                 "Content-Range": f"bytes 0-{size - 1}/{size}"}, timeout=300)
+    if up.status_code >= 300:
+        return {"error": {"code": "upload_failed", "message": f"HTTP {up.status_code}"}}
+    return r
+
+
 def publish(pages_dir):
     pend_path = os.path.join(pages_dir, "tiktok", "pending.json")
     pending = json.load(open(pend_path)) if os.path.exists(pend_path) else []
     if not pending:
         print("NOTHING: новых постов для TikTok нет")
         return
-    urls = {x["id"]: f"{PAGES_URL}/{x['image']}" for x in pending}
+    urls = {x["id"]: f"{PAGES_URL}/{x['image']}" for x in pending if x.get("image")}
     for _ in range(30):  # ждём, пока GitHub Pages выкатит картинки
         if all(requests.head(u, timeout=15).status_code == 200 for u in urls.values()):
             break
@@ -186,10 +230,13 @@ def publish(pages_dir):
                 "#cs2 #counterstrike #киберспорт #cs2news #ксго")[:4000]
         body = {"post_info": {"title": x["lead"][:90], "description": desc, "privacy_level": privacy,
                               "disable_comment": False, "auto_add_music": True},
-                "source_info": {"source": "PULL_FROM_URL", "photo_cover_index": 0, "photo_images": [urls[x["id"]]]},
+                "source_info": {"source": "PULL_FROM_URL", "photo_cover_index": 0, "photo_images": [urls.get(x["id"], "")]},
                 "post_mode": "DIRECT_POST", "media_type": "PHOTO"}
         try:
-            r = requests.post(f"{API}/post/publish/content/init/", headers=hdr, json=body, timeout=120).json()
+            if x.get("video"):
+                r = post_video(hdr, x["video"], desc, privacy)  # звук клипа, без музыки TikTok
+            else:
+                r = requests.post(f"{API}/post/publish/content/init/", headers=hdr, json=body, timeout=120).json()
         except requests.exceptions.RequestException as e:
             # мог дойти: помечаем как отправленный, чтобы не было дублей
             r = {"error": {"code": "uncertain", "message": str(type(e).__name__)}}

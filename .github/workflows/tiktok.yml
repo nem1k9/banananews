@@ -63,6 +63,7 @@ jobs:
         run: |
           npm i --no-save --silent playwright@1.48.2
           npx playwright install --with-deps chromium > /dev/null
+          which ffmpeg > /dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null)
           python3 tiktok.py build pages
           cd pages && git add -A && (git diff --cached --quiet || (git commit -qm "TikTok: картинки" && git push -q origin gh-pages))
       - if: steps.check.outputs.has_new == 'true'

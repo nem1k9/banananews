@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+html,body{background:transparent!important}
+#card{width:1080px;height:1920px;background:transparent}
+.top{top:70px}
+.hl{position:absolute;left:60px;right:60px;top:300px;font:900 58px/1.05 Montserrat;text-transform:uppercase;text-align:center;text-shadow:0 4px 24px #000}
+.hl em{font-style:normal;color:var(--acc)}
+.cta{position:absolute;left:60px;right:60px;bottom:170px;text-align:center}
+.cta .l1{font:800 42px Montserrat;color:#fff;text-shadow:0 3px 16px #000}
+.cta .l2{display:inline-block;margin-top:20px;font:italic 900 82px Montserrat;color:#000;background:var(--acc);padding:10px 40px;transform:skewX(-10deg)}
+.cta .l2 span{display:inline-block;transform:skewX(10deg)}
+</style></head><body><div id="card">
+<div class="top"><div class="event"><span>CS2 NEWS</span></div><img class="logo" src="../assets/logo.svg"></div>
+<div class="hl" id="hl"></div>
+<div class="cta"><div class="l1">Больше клипов в Telegram</div><div class="l2"><span>@BananNewws</span></div></div>
+</div><script>
+const D=window.DATA;
+document.fonts.ready.then(()=>{if(D.title){hl.innerHTML=D.title.replace(/\*(.+?)\*/g,'<em>$1</em>');let fs=58;while(hl.offsetHeight>360&&fs>34){fs-=4;hl.style.fontSize=fs+'px'}}else hl.remove();});
+</script></body></html>
