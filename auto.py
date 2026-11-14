@@ -47,8 +47,12 @@ POPULAR = {n.lower() for k in ("tier1", "cis_tier2") for n in _T[k]}
 
 
 def popular(name):
+    """Точное совпадение с teams.json (хвосты вроде Esports/Gaming/Team не мешают). Академии и юниоры не проходят."""
+    import re as _re
     n = (name or "").lower().strip()
-    return n in POPULAR or any(n == p or n.startswith(p + " ") for p in POPULAR)
+    n = _re.sub(r"\s+(esports|e-sports|gaming|team|clan|cs2|cs)$", "", n)
+    n = _re.sub(r"^team\s+", "", n)
+    return n in POPULAR or ("team " + n) in POPULAR
 
 
 def notable(m):
