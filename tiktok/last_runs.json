@@ -32,5 +32,45 @@
     "log_id": "202611141701196C5637B63AD30B5C0618"
    }
   }
+ },
+ {
+  "id": 18,
+  "at": "2026-11-14T09:28:09+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "p_pub_url~v2.7707956175388674068"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "202611141728081137C634000EF74576DB"
+   }
+  }
+ },
+ {
+  "id": 20,
+  "at": "2026-11-14T09:29:40+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "p_pub_url~v2.7707956496700721173"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261114172939A71A01EE84F2A256FAAF"
+   }
+  }
  }
 ]
