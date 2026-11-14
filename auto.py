@@ -52,16 +52,17 @@ def popular(name):
 
 
 def notable(m):
-    """Постим только матчи, где играет популярная команда (teams.json) и турнир не тир-3."""
+    """Крупный турнир (S/A): хватит одной популярной команды. Мелкий (B): обе команды должны быть популярными."""
     if m.get("tier") not in ("s", "a", "b"):
         return False
     if m["slug"] not in _rank_cache:
         try:
             d = details(m["slug"])
-            _rank_cache[m["slug"]] = any(popular((d.get(t) or {}).get("name")) for t in ("team1", "team2"))
+            _rank_cache[m["slug"]] = [popular((d.get(t) or {}).get("name")) for t in ("team1", "team2")]
         except Exception:
-            _rank_cache[m["slug"]] = False
-    return _rank_cache[m["slug"]]
+            _rank_cache[m["slug"]] = [False, False]
+    pop = _rank_cache[m["slug"]]
+    return any(pop) if m.get("tier") in ("s", "a") else all(pop)
 
 
 def ru_stage(info):
