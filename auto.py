@@ -73,7 +73,18 @@ def ru_stage(info):
     return ""
 
 
+def already_posted(key, question=None):
+    """Повторная сверка с лентой канала перед отправкой (на случай второго автопостера)."""
+    time.sleep(random.uniform(2, 8))
+    feed = tg.channel_html()
+    return f"?k={key}" in feed or bool(question and question[:40] in feed)
+
+
 def send(kind, args, text, key):
+    if already_posted(key):
+        _done.add(key)
+        print(f"skip: {key} уже в канале")
+        return
     path = os.path.join(ROOT, "out", key + ".html")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "w").write(text)
@@ -189,7 +200,7 @@ def post_poll(m, feed):
         return
     st = iso(m["start_utc"]).astimezone(MSK)
     q = f"{t1} vs {t2}: кто победит? Старт в {st:%H:%M} по Киеву"
-    if q[:40] in feed:
+    if q[:40] in feed or already_posted(key, q):
         return
     r = subprocess.run(["python3", os.path.join(ROOT, "tg.py"), "poll", "--question", q,
                         "-o", f"{tag(t1)} {t1}", "-o", f"{tag(t2)} {t2}", "--key", key], capture_output=True, text=True)
