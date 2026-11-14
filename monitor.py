@@ -27,6 +27,9 @@ MAX_NEWS_AGE = dt.timedelta(hours=6)          # старше — не новос
 
 GNEWS = "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q="
 FEEDS = [
+    # Escorenews обычно первым публикует цитаты и инсайды на русском (раньше cybersport.ru на часы)
+    ("Escorenews", "https://news.google.com/rss/search?q=site:escorenews.com/ru/csgo/news+when:1d&hl=ru&gl=RU&ceid=RU:ru",
+     lambda it: not re.search(r"прогноз|кэф|трансляц|стрим", it["title"], re.I)),
     ("cybersport.ru", "https://www.cybersport.ru/rss/materials", lambda it: "/tags/cs2/" in it["link"]),
     ("dust2.us", "https://www.dust2.us/rss", None),
     ("HLTV", GNEWS + "site:hltv.org+when:1d",
@@ -79,7 +82,7 @@ def rss(source, url, keep, start, max_age=MAX_NEWS_AGE):
         if not d or d <= max(start, NOW - max_age) or d > NOW + dt.timedelta(minutes=5):
             continue
         enc = it.find("enclosure")
-        item = {"source": source, "title": re.sub(r"\s+-\s+[\w.]+\.(org|com|us|gg)$", "", html.unescape(it.findtext("title") or "").strip()),
+        item = {"source": source, "title": re.sub(r"\s+-\s+[\w.]+\.(org|com|us|gg|ru)$", "", html.unescape(it.findtext("title") or "").strip()),
                 "link": it.findtext("link") or "", "date_kyiv": d.astimezone(MSK).strftime("%H:%M"),
                 "image": enc.attrib.get("url") if enc is not None else None,
                 "summary": re.sub(r"<[^>]+>", "", html.unescape(it.findtext("description") or ""))[:300]}
