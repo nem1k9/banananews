@@ -192,5 +192,45 @@
     "log_id": "20261114220304EF9E25B86FF1745F2F7D"
    }
   }
+ },
+ {
+  "id": 33,
+  "at": "2026-11-14T17:17:49+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "p_pub_url~v2.7708077244556625940"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "2026111501174808E20921E5DAF4CFD0D3"
+   }
+  }
+ },
+ {
+  "id": 35,
+  "at": "2026-11-14T17:19:20+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "p_pub_url~v2.7708077557014677524"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "2026111501192070720390E907F4765E52"
+   }
+  }
  }
 ]
