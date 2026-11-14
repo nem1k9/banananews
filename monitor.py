@@ -3,6 +3,7 @@
 
   python3 monitor.py              # JSON с новым или строка NOTHING_NEW
   python3 monitor.py --hours 6    # окно вручную (например, для первого/пробного запуска)
+  python3 monitor.py --hours 3 --seen /home/user/.banan_seen.json   # частые прогоны: окно 3 ч, без повторного показа
 
 Расписание (Киев, минута :23) задано в SLOTS; окно = от прошлого слота до сейчас.
 Разделы ответа:
@@ -148,6 +149,20 @@ def main():
     for src, url, keep in FEEDS:
         news += rss(src, url, keep, start, dt.timedelta(hours=hours) if hours else MAX_NEWS_AGE)
     news = dedupe(news)
+    # --seen FILE: помнить уже показанные новости (для частых прогонов с широким окном:
+    # Google News иногда отдаёт новость с опозданием 20–40 минут, узкое окно её пропустит)
+    if "--seen" in sys.argv:
+        seen_path = sys.argv[sys.argv.index("--seen") + 1]
+        try:
+            seen = json.load(open(seen_path))
+        except Exception:
+            seen = {}
+        news = [n for n in news if n["link"] not in seen]
+        cutoff = (NOW - dt.timedelta(days=2)).isoformat()
+        seen = {k: v for k, v in seen.items() if v >= cutoff}
+        for n in news:
+            seen[n["link"]] = NOW.isoformat(timespec="minutes")
+        json.dump(seen, open(seen_path, "w"))
 
     finished, upcoming = [], []
     today = NOW.astimezone(MSK).date()
