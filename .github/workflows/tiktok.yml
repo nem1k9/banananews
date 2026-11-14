@@ -61,5 +61,5 @@ jobs:
         run: |
           [ -f tiktok_state.enc ] || exit 0
           python3 tiktok.py publish pages
-          (cd pages && git add -A && (git diff --cached --quiet || (git commit -qm "TikTok: опубликовано" && git push -q origin gh-pages)))
-          git add tiktok_state.enc && (git diff --cached --quiet || (git commit -qm "TikTok: обновлён токен" && git push -q))
+          (cd pages && git add -A && (git diff --cached --quiet || (git commit -qm "TikTok: опубликовано" && for i in 1 2 3; do git pull -q --rebase origin gh-pages && git push -q origin gh-pages && break; sleep 5; done)))
+          git add tiktok_state.enc && (git diff --cached --quiet || (git commit -qm "TikTok: обновлён токен" && for i in 1 2 3; do git pull -q --rebase origin main && git push -q && break; sleep 5; done))

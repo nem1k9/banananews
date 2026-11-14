@@ -162,7 +162,8 @@ def publish(pages_dir):
     for i, x in enumerate(pending):
         info = requests.post(f"{API}/post/publish/creator_info/query/", headers=hdr, timeout=30).json().get("data", {})
         levels = info.get("privacy_level_options") or ["SELF_ONLY"]
-        privacy = "PUBLIC_TO_EVERYONE" if "PUBLIC_TO_EVERYONE" in levels else levels[0]
+        # после аудита TikTok: для всех; до аудита неодобренному приложению можно только SELF_ONLY
+        privacy = "PUBLIC_TO_EVERYONE" if "PUBLIC_TO_EVERYONE" in levels else "SELF_ONLY"
         desc = (f"{x['lead']}\n\nБольше новостей и счёт матчей в Telegram: @BananNewws 🍌\n"
                 "#cs2 #counterstrike #киберспорт #cs2news #ксго")[:4000]
         body = {"post_info": {"title": x["lead"][:90], "description": desc, "privacy_level": privacy,
