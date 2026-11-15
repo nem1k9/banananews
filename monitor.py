@@ -12,7 +12,7 @@
   upcoming  — матчи S/A-тира, до начала которых ~1.5–2.5 часа (опрос «кто победит?»)
 Повторы дополнительно отсекаются по ленте канала: `python3 tg.py seen <key>`.
 """
-import datetime as dt, email.utils, html, json, re, sys, xml.etree.ElementTree as ET
+import datetime as dt, email.utils, html, json, os, re, subprocess, sys, xml.etree.ElementTree as ET
 import requests
 import bo3, tg
 
@@ -32,8 +32,7 @@ FEEDS = [
      lambda it: not re.search(r"прогноз|кэф|трансляц|стрим", it["title"], re.I)),
     ("cybersport.ru", "https://www.cybersport.ru/rss/materials", lambda it: "/tags/cs2/" in it["link"]),
     ("dust2.us", "https://www.dust2.us/rss", None),
-    ("HLTV", GNEWS + "site:hltv.org+when:1d",
-     lambda it: not re.search(r"Player Profile|The home of competitive|Prediction|News from|Matches|Results|Ranking| vs\. .+ at ", it["title"])),
+    # HLTV напрямую через браузер (hltv.py), не через Google News: см. hltv_direct()
     ("Steam (Valve)", "https://store.steampowered.com/feeds/news/app/730/?l=russian", None),
 ]
 
@@ -92,6 +91,29 @@ def rss(source, url, keep, start, max_age=MAX_NEWS_AGE):
     return out
 
 
+def hltv_direct(start, max_age):
+    """Новости HLTV напрямую: время публикации и текст статьи (а не только заголовок)."""
+    try:
+        r = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "hltv.py"), "8"],
+                           capture_output=True, text=True, timeout=240)
+        items = json.loads(r.stdout)
+    except Exception as e:
+        print(f"warn: HLTV: {e}", file=sys.stderr)
+        return []
+    out = []
+    for it in items:
+        if not it.get("unix"):
+            continue
+        d = dt.datetime.fromtimestamp(it["unix"], dt.timezone.utc)
+        if d <= max(start, NOW - max_age) or d > NOW + dt.timedelta(minutes=5):
+            continue
+        if re.search(r"Short news|Player Profile|Prediction|Ranking", it["title"]):
+            continue
+        out.append({"source": "HLTV", "title": it["title"], "link": it["link"], "date_kyiv": d.astimezone(MSK).strftime("%H:%M"),
+                    "image": it.get("image"), "summary": re.sub(r"\n{2,}", "\n", it.get("text", ""))[:1500]})
+    return out
+
+
 STOP = {"the", "and", "for", "with", "after", "over", "from", "into", "says", "cs2", "counter", "strike", "hltv", "org",
         "team", "esports", "gaming", "news", "update", "major", "blast", "pgl", "iem", "esl", "fall", "spring", "season",
         "2026", "2027", "dust2", "us"}
@@ -147,6 +169,7 @@ def main():
     news = []
     for src, url, keep in FEEDS:
         news += rss(src, url, keep, start, dt.timedelta(hours=hours) if hours else MAX_NEWS_AGE)
+    news += hltv_direct(start, dt.timedelta(hours=hours) if hours else MAX_NEWS_AGE)
     news = dedupe(news)
 
     finished, upcoming = [], []
