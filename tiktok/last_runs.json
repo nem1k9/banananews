@@ -333,5 +333,65 @@
     "log_id": "20261115175520B95A5C94B26D75073D31"
    }
   }
+ },
+ {
+  "id": 52,
+  "at": "2026-11-15T17:24:07+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "p_pub_url~v2.7708448106865657864"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261116012407B57E32C6817C37D43FED"
+   }
+  }
+ },
+ {
+  "id": 54,
+  "at": "2026-11-15T17:25:38+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "p_pub_url~v2.7708450258506008594"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261116012538504C41669FC23DDBA4BB"
+   }
+  }
+ },
+ {
+  "id": 55,
+  "at": "2026-11-15T17:27:09+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "p_pub_url~v2.7708450830269106183"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261116012709C6BACAFA0E4F11E5C692"
+   }
+  }
  }
 ]
