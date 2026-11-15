@@ -292,5 +292,46 @@
     "log_id": "20261115054426FE8A339ACBBB65E61BA7"
    }
   }
+ },
+ {
+  "id": 40,
+  "at": "2026-11-15T09:53:50+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "p_pub_url~v2.7708333945615566855"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261115175349419A87500D8A81B3771D"
+   }
+  }
+ },
+ {
+  "id": 41,
+  "at": "2026-11-15T09:55:25+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "v_pub_file~v2-1.7708334293277394962",
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7708334293277411346&upload_token=07d0a2da-a46c-e87b-26b9-51a165d188da"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261115175520B95A5C94B26D75073D31"
+   }
+  }
  }
 ]
