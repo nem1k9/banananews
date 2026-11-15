@@ -263,6 +263,12 @@ def main():
         if os.environ.get("GITHUB_OUTPUT"):
             open(os.environ["GITHUB_OUTPUT"], "a").write(f"has_work={'true' if has else 'false'}\n")
         return
+    import fcntl
+    lock = open(os.path.join(ROOT, "state", ".auto.lock"), "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)  # только один автопостер на машину
+    except OSError:
+        sys.exit("auto.py уже запущен, второй экземпляр не нужен")
     if "--loop" in sys.argv:
         # держим задачу живой, пока идут известные матчи: без зависимости от задержек расписания GitHub
         hard = time.time() + float(sys.argv[sys.argv.index("--loop") + 1])

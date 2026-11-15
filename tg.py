@@ -117,6 +117,20 @@ def already(key, question=None):
     return False
 
 
+CLAIMS = os.path.join(ROOT, "state", "claims")
+
+
+def claim(key):
+    """Атомарная заявка на ключ: из любого числа одновременных процессов пост по ключу уйдёт только один раз."""
+    os.makedirs(CLAIMS, exist_ok=True)
+    p = os.path.join(CLAIMS, re.sub(r"[^\w.-]", "_", key))
+    try:
+        os.close(os.open(p, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+        return p
+    except FileExistsError:
+        return None
+
+
 def state():
     try:
         return json.load(open(STATE))
@@ -195,6 +209,9 @@ def main():
         return
     if a.key and already(a.key, a.question if a.cmd == "poll" else None):
         sys.exit(f"skip: ключ {a.key} уже публиковался")
+    claimed = claim(a.key) if a.key else None
+    if a.key and not claimed:
+        sys.exit(f"skip: ключ {a.key} уже занят другим запуском")
     text = open(a.file).read().strip() if a.file else ""
     text = humanize(text)
     if a.cmd in ("text", "photo", "album") and not os.environ.get("TG_NO_TOPIC_CHECK"):
@@ -205,10 +222,20 @@ def main():
         mine = monitor.entities(re.sub(r"<[^>]+>", " ", text))
         for p in monitor.channel_posts()[-10:]:
             if monitor.similar(mine, monitor.entities(p)):
+                if claimed: os.remove(claimed)
                 sys.exit("skip: в канале уже есть пост на эту тему")
     if a.key and a.cmd != "poll":
         text += key_tag(a.key)  # невидимая метка: по ней следующие запуски видят, что пост уже был
 
+    try:
+        res = _send(a, text)
+    except RuntimeError:
+        if claimed: os.remove(claimed)  # Telegram отклонил, пост не вышел: ключ можно занять снова
+        raise
+    remember(a.key or f"{a.cmd}-{dt.datetime.now().timestamp():.0f}", a.cmd, text if a.cmd != "poll" else res.get("poll", {}).get("question", text), res)
+
+
+def _send(a, text):
     if a.cmd == "text":
         res = send_html(lambda t, m: api("sendMessage", chat_id=CHAT, text=t, parse_mode=m or "",
                                          link_preview_options=json.dumps({"is_disabled": True})), text)
@@ -230,8 +257,8 @@ def main():
                     is_anonymous=str(not a.public_votes).lower())
         if a.quiz is not None:
             data.update(type="quiz", correct_option_id=a.quiz, explanation=a.explanation)
-        res = api("sendPoll", **data); text = q
-    remember(a.key or f"{a.cmd}-{dt.datetime.now().timestamp():.0f}", a.cmd, text, res)
+        res = api("sendPoll", **data)
+    return res
 
 
 
