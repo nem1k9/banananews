@@ -18,6 +18,7 @@ const D=window.DATA;ev.textContent=D.event||'CS2';kind.textContent=D.kind||'Но
 if(D.image){im.style.backgroundImage=`url("${D.image}")`;hr.remove();ha.remove()}
 else{const L=(D.logos||[]).filter(Boolean);
  hr.innerHTML=L.length?L.map(l=>`<img src="${l}">`).join(L.length==2&&D.vs!==false?'<div class="vs">VS</div>':''):'<img class="brand-big" src="../assets/logo.svg">';}
+if(D.heroH)hr.querySelectorAll('img').forEach(i=>{i.style.maxHeight=D.heroH+'px'});
 hd.innerHTML=D.title.replace(/\*(.+?)\*/g,'<em>$1</em>');
 document.fonts.ready.then(()=>{let fs=76;while(hd.offsetHeight>520&&fs>44){fs-=4;hd.style.fontSize=fs+'px'}
 if(D.tag){tg.textContent=D.tag;tg.style.bottom=(160+hd.offsetHeight+24)+'px'}else tg.remove();});
