@@ -20,6 +20,42 @@ STATE = os.path.join(ROOT, "tiktok_state.enc")
 DAILY_CAP = 14      # постов в TikTok в сутки (по Киеву)
 PER_RUN = 3         # за один запуск
 MAX_AGE_H = 6       # старые посты канала не берём
+MUSIC_DIR = os.path.join(ROOT, "assets", "music")   # зашифрованные нарезки по категориям (ключ — секрет MUSIC_KEY)
+
+
+def category(text):
+    """Категория поста канала по тексту: live / result / quote / meme / news."""
+    t = text.lower()
+    lead = text.split("\n")[0]
+    if re.search(r"забира(ют|ет) (карту|dust2|mirage|inferno|nuke|ancient|anubis|vertigo|overpass|train|cache)", t) or "после " in t and "-й карты" in t:
+        return "live"
+    if re.search(r"не оставили шансов|дожали|чемпион|обыгра|вылет|проходят в", t):
+        return "result"
+    if re.search(r"\bмем", t):
+        return "meme"
+    long_quote = any(len(q.split()) >= 5 for q in re.findall(r"«([^»]+)»", text))
+    if long_quote or re.match(r"^\W*[\w.\-]+\s*:", lead):
+        return "quote"
+    return "news"
+
+
+def music_for(cat):
+    """Расшифровать нарезку категории во временный файл. None — если ключа нет (тогда пост уходит фото)."""
+    enc = os.path.join(MUSIC_DIR, f"{cat}.m4a.enc")
+    if not (os.environ.get("MUSIC_KEY") and os.path.exists(enc)):
+        return None
+    out = os.path.join(ROOT, "out", f"music_{cat}.m4a")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    r = subprocess.run(["openssl", "enc", "-d", "-aes-256-cbc", "-pbkdf2", "-in", enc, "-out", out, "-pass", "env:MUSIC_KEY"],
+                       capture_output=True)
+    return out if r.returncode == 0 else None
+
+
+def photo_video(img, music, out):
+    """Неподвижная вертикальная картинка + трек категории (13 сек)."""
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-loop", "1", "-framerate", "30", "-i", img, "-i", music, "-shortest",
+                    "-vf", "scale=1080:1920,format=yuv420p", "-c:v", "libx264", "-preset", "veryfast", "-tune", "stillimage",
+                    "-crf", "22", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", out], check=True)
 API = "https://open.tiktokapis.com/v2"
 
 
@@ -48,7 +84,7 @@ def feed_posts():
         out.append({"id": int(pid.group(1)), "photo": ph[0] if ph else None, "video": html.unescape(vid[0]) if vid else None,
                     "time": dt.datetime.fromisoformat(t.group(1)),
                     "views": views((re.search(r'tgme_widget_message_views">([^<]+)<', b) or [None, "0"])[1]),
-                    "lead": text.split("\n")[0].strip()})
+                    "lead": text.split("\n")[0].strip(), "text": text})
     return out
 
 
@@ -136,7 +172,14 @@ def build(pages_dir):
         Image.open(png).convert("RGB").save(os.path.join(out_dir, f"{p['id']}.jpg"), "JPEG", quality=90, optimize=True)
         for f in (src, data, png):
             os.remove(f)
-        pending.append({"id": p["id"], "image": f"tiktok/{p['id']}.jpg", "lead": headline(p["lead"])})
+        item = {"id": p["id"], "image": f"tiktok/{p['id']}.jpg", "lead": headline(p["lead"])}
+        cat = category(p.get("text", p["lead"]))
+        music = music_for(cat)
+        if music:
+            vid = os.path.join(ROOT, "out", f"photo_{p['id']}.mp4")
+            photo_video(os.path.join(out_dir, f"{p['id']}.jpg"), music, vid)
+            item.update(video=vid, category=cat)
+        pending.append(item)
     json.dump(pending, open(os.path.join(out_dir, "pending.json"), "w"), ensure_ascii=False, indent=1)
     print(f"сегодня уже {today}/{DAILY_CAP}, новых к публикации: {len(pending)}")
     for x in pending:

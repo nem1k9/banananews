@@ -24,6 +24,7 @@ jobs:
       TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_STATE_KEY: ${{ secrets.TIKTOK_STATE_KEY }}
+      MUSIC_KEY: ${{ secrets.MUSIC_KEY }}
       TELEGRAM_CHANNEL: "@BananNewws"
       PAGES_URL: "https://nem1k9.github.io/banananews"
     steps:
