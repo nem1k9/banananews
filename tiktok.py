@@ -19,7 +19,7 @@ REDIRECT_URI = f"{PAGES_URL}/tiktok-callback.html"
 STATE = os.path.join(ROOT, "tiktok_state.enc")
 DAILY_CAP = 14      # постов в TikTok в сутки (по Киеву)
 PER_RUN = 3         # за один запуск
-MAX_AGE_H = 6       # старые посты канала не берём
+MAX_AGE_H = float(os.environ.get("TIKTOK_MAX_AGE_H") or 6)   # старые посты канала не берём (вручную можно больше)
 MUSIC_DIR = os.path.join(ROOT, "assets", "music")   # зашифрованные нарезки по категориям (ключ — секрет MUSIC_KEY)
 
 

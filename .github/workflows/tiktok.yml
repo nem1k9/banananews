@@ -8,6 +8,9 @@ on:
       auth_code:
         description: "Код с страницы tiktok-callback (только при подключении TikTok)"
         required: false
+      max_age_hours:
+        description: "За сколько часов брать посты канала (по умолчанию 6; для теста можно 48)"
+        required: false
 
 permissions:
   contents: write
@@ -25,6 +28,7 @@ jobs:
       TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
       TIKTOK_STATE_KEY: ${{ secrets.TIKTOK_STATE_KEY }}
       MUSIC_KEY: ${{ secrets.MUSIC_KEY }}
+      TIKTOK_MAX_AGE_H: ${{ github.event.inputs.max_age_hours }}
       TELEGRAM_CHANNEL: "@BananNewws"
       PAGES_URL: "https://nem1k9.github.io/banananews"
     steps:
