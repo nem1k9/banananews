@@ -1,0 +1,22 @@
+[Unit]
+Description=CS2 editorial Codex runner
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+User=cs2editor
+WorkingDirectory=/opt/banananews/cs2-autoposter
+EnvironmentFile=/etc/cs2-editor.env
+ExecStart=/usr/bin/node runner/agent.mjs
+Restart=on-failure
+RestartSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/cs2-editor
+# Set CODEX_HOME=/var/lib/cs2-editor/.codex and TMPDIR=/var/lib/cs2-editor/tmp.
+# Authentication must be performed interactively as cs2editor before enabling.
+[Install]
+WantedBy=multi-user.target

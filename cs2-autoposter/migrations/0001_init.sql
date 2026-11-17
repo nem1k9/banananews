@@ -1,0 +1,15 @@
+PRAGMA foreign_keys=ON;
+CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), autopost INTEGER NOT NULL DEFAULT 0, categories TEXT NOT NULL DEFAULT '["TRANSFER","MATCH_RESULT","ROSTER","UPDATE","GENERAL_NEWS"]', template TEXT NOT NULL DEFAULT 'default', poll_seconds INTEGER NOT NULL DEFAULT 10);
+INSERT OR IGNORE INTO settings(id) VALUES(1);
+CREATE TABLE IF NOT EXISTS sources (id TEXT PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL CHECK(kind IN ('steam','rss')), url TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, official INTEGER NOT NULL DEFAULT 1, failures INTEGER NOT NULL DEFAULT 0, last_checked INTEGER, last_success INTEGER, status TEXT NOT NULL DEFAULT 'unread', etag TEXT);
+INSERT OR IGNORE INTO sources(id,name,kind,url) VALUES('steam','Valve / Steam CS2','steam','https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=730&count=20&maxlength=0&feeds=steam_community_announcements');
+CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, match_id TEXT NOT NULL, revision INTEGER NOT NULL, type TEXT NOT NULL, received_at INTEGER NOT NULL, payload TEXT NOT NULL, processed_at INTEGER);
+CREATE TABLE IF NOT EXISTS matches (id TEXT PRIMARY KEY, provider TEXT NOT NULL, revision INTEGER NOT NULL, status TEXT NOT NULL, payload TEXT NOT NULL, prepared TEXT, received_at INTEGER NOT NULL, finished_at INTEGER);
+CREATE TABLE IF NOT EXISTS posts (id TEXT PRIMARY KEY, event_key TEXT NOT NULL UNIQUE, category TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('ready','sending','published','dry-run','uncertain','rejected','cancelled')), caption TEXT NOT NULL, card TEXT, png BLOB, created_at INTEGER NOT NULL, received_at INTEGER NOT NULL, occurred_at INTEGER, sent_at INTEGER, attempted_at INTEGER, message_id INTEGER, telegram_url TEXT, attempt INTEGER NOT NULL DEFAULT 0, next_attempt_at INTEGER NOT NULL DEFAULT 0, error TEXT, source_url TEXT);
+CREATE INDEX IF NOT EXISTS post_queue ON posts(status,next_attempt_at);
+CREATE TABLE IF NOT EXISTS articles (id TEXT PRIMARY KEY, source_id TEXT NOT NULL, url TEXT NOT NULL UNIQUE, title TEXT NOT NULL, body TEXT NOT NULL, published_at INTEGER NOT NULL, category TEXT NOT NULL, entity_key TEXT NOT NULL, fingerprint TEXT NOT NULL UNIQUE, status TEXT NOT NULL DEFAULT 'pending', claim_token TEXT, lease_until INTEGER, attempts INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS article_entities ON articles(entity_key,published_at);
+CREATE TABLE IF NOT EXISTS generation_jobs (id TEXT PRIMARY KEY, kind TEXT NOT NULL, payload TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', claim_token TEXT, lease_until INTEGER, attempts INTEGER NOT NULL DEFAULT 0, result TEXT);
+CREATE TABLE IF NOT EXISTS errors (id INTEGER PRIMARY KEY AUTOINCREMENT, component TEXT NOT NULL, code TEXT NOT NULL, created_at INTEGER NOT NULL, detail TEXT);
+
+CREATE TABLE IF NOT EXISTS prepared_assets (match_id TEXT NOT NULL,winner_id TEXT NOT NULL,png BLOB NOT NULL,PRIMARY KEY(match_id,winner_id));

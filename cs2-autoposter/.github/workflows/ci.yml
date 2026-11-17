@@ -1,0 +1,26 @@
+name: CS2 Autoposter CI
+on:
+  pull_request:
+    paths: ['cs2-autoposter/**']
+  push:
+    branches: ['claude/banannews-telegram-monitor-lrrhnv']
+    paths: ['cs2-autoposter/**']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cs2-autoposter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cs2-autoposter/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx wrangler deploy --dry-run --outdir artifacts/worker

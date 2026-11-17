@@ -1,0 +1,31 @@
+{
+  "name": "cs2-news-autoposter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "db:migrate": "wrangler d1 migrations apply DB --local",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "demo": "node scripts/demo.mjs",
+    "runner": "node runner/agent.mjs"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "2.6.2",
+    "fast-xml-parser": "5.3.6",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "0.8.71",
+    "@cloudflare/workers-types": "4.20260702.1",
+    "prettier": "3.6.2",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4",
+    "wrangler": "4.45.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

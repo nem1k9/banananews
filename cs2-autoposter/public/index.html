@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>CS2 • Control room</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="login">
+      <div class="login-card">
+        <div class="brand">✦ CS2 / CONTROL ROOM</div>
+        <h1>Редакция в одном окне.</h1>
+        <p>Новости, live-матчи и публикации.</p>
+        <form id="login-form">
+          <label
+            >Ключ администратора<input
+              id="token"
+              type="password"
+              autocomplete="off"
+              required
+              placeholder="Введите ключ доступа" /></label
+          ><button>Войти в редакцию ↗</button>
+        </form>
+        <p id="login-error" role="alert"></p>
+      </div>
+    </div>
+    <div id="app" hidden>
+      <aside>
+        <div class="brand">✦ CS2<span>CONTROL ROOM</span></div>
+        <nav>
+          <button data-tab="dashboard" class="active">◈ Обзор</button
+          ><button data-tab="matches">◉ Live Matches</button
+          ><button data-tab="posts">▤ Публикации</button
+          ><button data-tab="sources">⌁ Источники</button
+          ><button data-tab="settings">⚙ Настройки</button>
+        </nav>
+        <div class="sidebar-bottom">
+          <span id="mode"></span><button id="logout">Выйти ↗</button>
+        </div>
+      </aside>
+      <main>
+        <header>
+          <div>
+            <small>РЕДАКЦИЯ / <span id="breadcrumb">ОБЗОР</span></small>
+            <h1 id="heading">Рабочий пульс</h1>
+            <p id="subheading">Каждое событие на своём месте.</p>
+          </div>
+          <button id="refresh" class="secondary">↻ Обновить</button>
+        </header>
+        <div id="notice" role="status"></div>
+        <section id="content"></section>
+        <footer>
+          CS2 NEWS AUTOPOSTER
+          <span>Проверенные факты. Контролируемая доставка.</span>
+        </footer>
+      </main>
+    </div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

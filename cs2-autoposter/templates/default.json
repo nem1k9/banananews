@@ -1,0 +1,21 @@
+{
+  "name": "Banan Demo",
+  "width": 1080,
+  "height": 1080,
+  "background": "#101018",
+  "panel": "#20202e",
+  "accent": "#a88bfa",
+  "foreground": "#f8f7ff",
+  "font": "Noto Sans",
+  "titleSize": 64,
+  "minTitleSize": 28,
+  "backgroundLayer": null,
+  "logoLayer": null,
+  "categories": {
+    "TRANSFER": { "label": "ТРАНСФЕР", "accent": "#c4a7ff" },
+    "MATCH_RESULT": { "label": "РЕЗУЛЬТАТ МАТЧА", "accent": "#b8ff71" },
+    "ROSTER": { "label": "СОСТАВ", "accent": "#67e8f9" },
+    "UPDATE": { "label": "ОБНОВЛЕНИЕ CS2", "accent": "#fbbf24" },
+    "GENERAL_NEWS": { "label": "CS2 NEWS", "accent": "#a88bfa" }
+  }
+}
