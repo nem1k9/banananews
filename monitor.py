@@ -35,15 +35,10 @@ FEEDS = [
     ("dust2.us", "https://www.dust2.us/rss", None),
     # HLTV напрямую через браузер (hltv.py), не через Google News: см. hltv_direct()
     # расширенные источники (через Google News RSS: прямые ленты закрыты Cloudflare)
-    ("HLTV (gnews)", GNEWS + "site:hltv.org/news+when:1d", None),
-    ("Reddit r/GO", GNEWS + "site:reddit.com/r/GlobalOffensive+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"megathread|help|bug|\?\s*-\s*Reddit|fix|elo|FPS|Thoughts", it["title"], re.I)),
-    ("Esports.gg", GNEWS + "site:esports.gg+counter-strike+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Taco|Fortnite|Overwatch|Apex Legends|Rainbow", it["title"], re.I)),
-    ("Dexerto", GNEWS + "site:dexerto.com+counter-strike+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Taco|Fortnite|Overwatch|Apex Legends|Rainbow", it["title"], re.I)),
-    ("Dot Esports", GNEWS + "site:dotesports.com+counter-strike+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Taco|Fortnite|Overwatch|Apex Legends|Rainbow", it["title"], re.I)),
-    ("EGamersWorld", GNEWS + "site:egamersworld.com+counter-strike+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"qualifier|prediction", it["title"], re.I)),
-    ("Hawk", GNEWS + "site:hawk.live+CS2+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Taco|Fortnite|Overwatch|Apex Legends|Rainbow", it["title"], re.I)),
-    ("CS2 общий", GNEWS + "CS2+counter-strike+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Taco|Fortnite|Overwatch|Apex Legends|Rainbow", it["title"], re.I)),
-    ("CS2 ru", "https://news.google.com/rss/search?q=CS2+when:1d&hl=ru&gl=RU&ceid=RU:ru", lambda it: CSKW.search(it["title"]) or re.search(r"КС|кс2|CS2", it["title"])),
+    ("CS2 hubs", GNEWS + "(site:hltv.org+OR+site:esports.gg+OR+site:dexerto.com+OR+site:dotesports.com+OR+site:hawk.live+OR+site:egamersworld.com)+counter-strike+when:1d",
+     lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Fortnite|Overwatch|Rainbow|Betting Tips|Qualifier|home of competitive|livescore|Matches &|vs\. .* at ", it["title"], re.I)),
+    ("Reddit r/GO", GNEWS + "site:reddit.com/r/GlobalOffensive+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"megathread|help|bug|fix|elo|FPS|Thoughts|prediction", it["title"], re.I)),
+    ("CS2 общий", GNEWS + "CS2+counter-strike+when:1d", lambda it: CSKW.search(it["title"])),
     ("Steam (Valve)", "https://store.steampowered.com/feeds/news/app/730/?l=russian", None),
 ]
 
@@ -80,10 +75,28 @@ def iso(s):
     return dt.datetime.fromisoformat(s.replace("Z", "+00:00")) if s else None
 
 
+def _fetch(url):
+    """Google News режет частые запросы: ответы кэшируются на 12 минут, при блокировке берётся последний кэш."""
+    import hashlib, time
+    p = "/tmp/monitor_cache_" + hashlib.md5(url.encode()).hexdigest()
+    if "news.google.com" in url and os.path.exists(p) and time.time() - os.path.getmtime(p) < 720:
+        return open(p, "rb").read()
+    try:
+        c = requests.get(url, headers=UA, timeout=15).content
+        ET.fromstring(c)
+        if "news.google.com" in url:
+            open(p, "wb").write(c)
+        return c
+    except Exception:
+        if os.path.exists(p):
+            return open(p, "rb").read()
+        raise
+
+
 def rss(source, url, keep, start, max_age=MAX_NEWS_AGE):
     out = []
     try:
-        root = ET.fromstring(requests.get(url, headers=UA, timeout=25).content)
+        root = ET.fromstring(_fetch(url))
     except Exception as e:
         print(f"warn: {source}: {e}", file=sys.stderr)
         return out
