@@ -25,6 +25,7 @@ POLL_LEAD = dt.timedelta(minutes=90)          # опрос минимум за 1
 POLL_MAX_LEAD = dt.timedelta(hours=8)
 MAX_NEWS_AGE = dt.timedelta(hours=6)          # старше — не новость, даже если окно больше
 
+CSKW = re.compile(r"CS2|CS:GO|Counter-Strike|HLTV|Major|BLAST Rivals|BLAST Bounty|BLAST Premier|PGL|IEM|ESL Pro|Vitality|NAVI|Spirit|FaZe|MOUZ|Falcons|FURIA|G2|Astralis|MongolZ|donk|ZywOo|s1mple|m0NESY|NiKo", re.I)
 GNEWS = "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q="
 FEEDS = [
     # Escorenews обычно первым публикует цитаты и инсайды на русском (раньше cybersport.ru на часы)
@@ -33,6 +34,16 @@ FEEDS = [
     ("cybersport.ru", "https://www.cybersport.ru/rss/materials", lambda it: "/tags/cs2/" in it["link"]),
     ("dust2.us", "https://www.dust2.us/rss", None),
     # HLTV напрямую через браузер (hltv.py), не через Google News: см. hltv_direct()
+    # расширенные источники (через Google News RSS: прямые ленты закрыты Cloudflare)
+    ("HLTV (gnews)", GNEWS + "site:hltv.org/news+when:1d", None),
+    ("Reddit r/GO", GNEWS + "site:reddit.com/r/GlobalOffensive+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"megathread|help|bug|\?\s*-\s*Reddit|fix|elo|FPS|Thoughts", it["title"], re.I)),
+    ("Esports.gg", GNEWS + "site:esports.gg+counter-strike+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Taco|Fortnite|Overwatch|Apex Legends|Rainbow", it["title"], re.I)),
+    ("Dexerto", GNEWS + "site:dexerto.com+counter-strike+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Taco|Fortnite|Overwatch|Apex Legends|Rainbow", it["title"], re.I)),
+    ("Dot Esports", GNEWS + "site:dotesports.com+counter-strike+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Taco|Fortnite|Overwatch|Apex Legends|Rainbow", it["title"], re.I)),
+    ("EGamersWorld", GNEWS + "site:egamersworld.com+counter-strike+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"qualifier|prediction", it["title"], re.I)),
+    ("Hawk", GNEWS + "site:hawk.live+CS2+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Taco|Fortnite|Overwatch|Apex Legends|Rainbow", it["title"], re.I)),
+    ("CS2 общий", GNEWS + "CS2+counter-strike+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"Dota|LoL|Valorant|GTA|Taco|Fortnite|Overwatch|Apex Legends|Rainbow", it["title"], re.I)),
+    ("CS2 ru", "https://news.google.com/rss/search?q=CS2+when:1d&hl=ru&gl=RU&ceid=RU:ru", lambda it: CSKW.search(it["title"]) or re.search(r"КС|кс2|CS2", it["title"])),
     ("Steam (Valve)", "https://store.steampowered.com/feeds/news/app/730/?l=russian", None),
 ]
 
