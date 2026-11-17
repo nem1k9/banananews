@@ -3,14 +3,14 @@
   python3 clips.py list [--hours 3] [--min-views 0]   # кандидаты (≤60 с, свежие, ещё не разобранные) + контекст матчей
   python3 clips.py post <id> --file post.html           # скачать, отправить видео, запомнить
   python3 clips.py skip <id> [<id>...]                  # пометить как разобранные (не подходят/повтор момента)
-Состояние: /home/user/clips/seen.json (разобранные клипы); повторы дополнительно отсекаются по ключу clip-<id> в ленте канала.
-Скрипт копируют из репозитория в /home/user/clips/clips.py каждый прогон (ветка с ним может отличаться от main)."""
+Состояние: /workspace/clips/seen.json (разобранные клипы); повторы дополнительно отсекаются по ключу clip-<id> в ленте канала.
+Скрипт копируют из репозитория в /workspace/clips/clips.py каждый прогон (ветка с ним может отличаться от main)."""
 import argparse, datetime as dt, json, os, subprocess, sys, time
 ROOT = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, ROOT if os.path.exists(os.path.join(ROOT, "tg.py")) else "/home/user/banananews")
+sys.path.insert(0, ROOT if os.path.exists(os.path.join(ROOT, "tg.py")) else "/workspace/banananews")
 import bo3, tg
 
-D = "/home/user/clips"
+D = "/workspace/clips"
 os.makedirs(D, exist_ok=True)
 SEEN = f"{D}/seen.json"
 URL = "https://www.twitch.tv/blastpremier/clips?range=24hr"

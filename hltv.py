@@ -5,8 +5,8 @@
 """
 import json, os, sys
 
-CAMOUFOX = os.environ.get("CAMOUFOX_BIN", "/home/user/camoufox/camoufox-bin")
-PROFILE = os.environ.get("CAMOUFOX_PROFILE", "/home/user/cfprofile")
+CAMOUFOX = os.environ.get("CAMOUFOX_BIN", "/workspace/camoufox/camoufox-bin")
+PROFILE = os.environ.get("CAMOUFOX_PROFILE", "/workspace/cfprofile")
 
 
 def fetch(limit=8):

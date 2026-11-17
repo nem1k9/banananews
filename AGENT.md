@@ -6,8 +6,14 @@
 
 ## 0. Подготовка и проверка нового
 ```bash
-git clone -q --depth 1 https://github.com/nem1k9/banananews /home/user/banananews && cd /home/user/banananews
-python3 -m pip install -q --break-system-packages --ignore-installed -r requirements.txt
+cd /workspace/banananews  # используйте существующий checkout
+git fetch -q origin refs/heads/claude/banannews-telegram-monitor-lrrhnv:refs/remotes/origin/claude/banannews-telegram-monitor-lrrhnv
+git checkout claude/banannews-telegram-monitor-lrrhnv
+source /workspace/banananews-env/bin/activate
+export XDG_CACHE_HOME=/workspace/.cache
+export CAMOUFOX_BIN=/workspace/camoufox/camoufox-bin
+export CAMOUFOX_PROFILE=/workspace/cfprofile
+python3 -m pip install -r requirements.txt
 python3 monitor.py          # смотрит только то, что появилось с прошлого запуска по расписанию
 ```
 Если `NOTHING_NEW` — сразу закончи, без постов и без других проверок.
@@ -113,10 +119,10 @@ python3 tg.py poll --question "..." -o ... --quiz 2 --explanation "..." --key qu
 ## 5а. Клипы с трансляции (`clips.py`)
 Видеоклипы моментов с матча публикуются отдельно от новостей. Источник: клипы канала blastpremier на Twitch за 24 часа (читает yt-dlp, ключи Twitch API не нужны).
 ```bash
-mkdir -p /home/user/clips && cp clips.py /home/user/clips/clips.py   # или git show <ветка>:clips.py > ...; скрипт нужен вне checkout main
-python3 /home/user/clips/clips.py list                        # кандидаты с идущего матча + контекст матчей; NO_LIVE_MATCH / NO_CLIPS, если брать нечего
-python3 /home/user/clips/clips.py post <id> --file post.html  # скачать (лучшее качество до 49 МБ), отправить видео
-python3 /home/user/clips/clips.py skip <id> ...               # пометить как разобранные
+mkdir -p /workspace/clips && cp clips.py /workspace/clips/clips.py   # или git show <ветка>:clips.py > ...; скрипт нужен вне checkout
+python3 /workspace/clips/clips.py list                        # кандидаты с идущего матча + контекст матчей; NO_LIVE_MATCH / NO_CLIPS, если брать нечего
+python3 /workspace/clips/clips.py post <id> --file post.html  # скачать (лучшее качество до 49 МБ), отправить видео
+python3 /workspace/clips/clips.py skip <id> ...               # пометить как разобранные
 ```
 Правила:
 - Только клипы **идущего сейчас** матча крупного турнира (S/A) с командой из `teams.json`; клипы прошедших матчей не берём (`list` сам отсекает всё, что снято до старта текущего матча).
