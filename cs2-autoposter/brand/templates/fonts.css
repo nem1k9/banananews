@@ -1,0 +1,49 @@
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(../assets/fonts/e45972c7e9f24dc3.woff2) format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(../assets/fonts/87e867b52640b3b3.woff2) format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(../assets/fonts/6f49e1b28bce7339.woff2) format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 900;
+  font-display: swap;
+  src: url(../assets/fonts/aa251b754e0adacb.woff2) format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(../assets/fonts/bcc2c8b38b3be4ef.woff2) format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(../assets/fonts/b931b96dad931f35.woff2) format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(../assets/fonts/0463e08122fee338.woff2) format('truetype');
+}

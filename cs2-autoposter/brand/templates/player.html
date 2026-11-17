@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="base.css"><style>
+.photo{position:absolute;right:-20px;bottom:110px;height:860px;z-index:2;filter:drop-shadow(0 0 40px #000)}
+.glow{position:absolute;right:60px;bottom:110px;width:560px;height:760px;background:linear-gradient(180deg,transparent,#ffc92822);transform:skewX(-14deg);border-left:6px solid var(--acc)}
+.nick{position:absolute;left:56px;top:190px;font:italic 900 120px Montserrat;text-transform:uppercase;line-height:.9;z-index:3;max-width:640px;word-break:break-all}
+.sub{position:absolute;left:60px;top:330px;font:700 26px Inter;color:var(--mute);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:14px;z-index:3}
+.sub img{height:44px}
+.stats{position:absolute;left:56px;top:420px;display:flex;flex-direction:column;gap:16px;z-index:3}
+.st{width:400px;background:#16161ae6;border-left:6px solid var(--acc);padding:16px 24px}
+.st .l{font:700 20px Inter;color:var(--mute);letter-spacing:3px;text-transform:uppercase}
+.st .v{font:italic 900 64px Montserrat;line-height:1.05}
+</style></head><body><div id="card"><div class="bgfx"></div>
+<div class="top"><div class="event"><span id="ev"></span></div><img class="logo" src="../assets/logo.svg"></div>
+<div class="glow"></div><img class="photo" id="ph">
+<div class="nick" id="nk"></div><div class="sub" id="sb"></div><div class="stats" id="ss"></div>
+<div class="bar"></div><div class="bottom"><div class="brand">БАНАН <b>NEWS</b></div><div class="kind" id="kind"></div></div>
+</div><script>
+const D=window.DATA;ev.textContent=D.event;nk.textContent=D.player.nick;kind.textContent=D.kind||'Статистика';
+if(D.player.nick.length>8)nk.style.fontSize='92px';
+ph.src=D.player.photo||'';if(!D.player.photo)ph.remove();
+sb.innerHTML=(D.player.teamLogo?`<img src="${D.player.teamLogo}">`:'')+`<span>${D.subtitle||''}</span>`;
+ss.innerHTML=D.stats.slice(0,4).map(s=>`<div class="st"><div class="l">${s.label}</div><div class="v">${s.value}</div></div>`).join('');
+</script></body></html>
