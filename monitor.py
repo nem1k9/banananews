@@ -40,7 +40,7 @@ FEEDS = [
     ("Reddit r/GO", GNEWS + "site:reddit.com/r/GlobalOffensive+when:1d", lambda it: CSKW.search(it["title"]) and not re.search(r"megathread|help|bug|fix|elo|FPS|Thoughts|prediction", it["title"], re.I)),
     ("CS2 общий", GNEWS + "CS2+counter-strike+when:1d", lambda it: CSKW.search(it["title"])),
     # русскоязычные сайты и интервью/цитаты
-    ("RU сайты", "https://news.google.com/rss/search?q=(site:cyber.sports.ru+OR+site:championat.com/cybersport+OR+site:bo3.gg+OR+site:vpesports.com+OR+site:kanobu.ru+OR+site:sportarena.com)+CS2+when:1d&hl=ru&gl=RU&ceid=RU:ru",
+    ("RU сайты", "https://news.google.com/rss/search?q=(site:esports.ru+OR+site:cyber.sports.ru+OR+site:championat.com/cybersport+OR+site:bo3.gg+OR+site:vpesports.com+OR+site:kanobu.ru+OR+site:sportarena.com)+CS2+when:1d&hl=ru&gl=RU&ceid=RU:ru",
      lambda it: CSKW.search(it["title"]) and not re.search(r"прогноз|кэф|ставк|трансляц|стрим|Live|против", it["title"], re.I)),
     ("Интервью/цитаты", GNEWS + "(CS2+OR+HLTV)+(interview+OR+said+OR+says+OR+reveals+OR+CEO)+when:1d",
      lambda it: CSKW.search(it["title"]) and not re.search(r"Betting|Prediction|Tip", it["title"], re.I)),
