@@ -831,5 +831,26 @@
     "log_id": "20261122083950506BFD12D5621F32D05F"
    }
   }
+ },
+ {
+  "id": 107,
+  "at": "2026-11-22T17:23:03+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "v_pub_file~v2-1.7711047425523238920",
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7711047425523255304&upload_token=4af13bec-0001-14f7-c712-0458f47591fd"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261123012301778B361A38810173B32F"
+   }
+  }
  }
 ]
