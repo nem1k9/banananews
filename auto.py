@@ -309,8 +309,6 @@ def main():
                 live = [1]
             if live:
                 last_live = time.time()
-            elif time.time() - last_live > TAIL:
-                break
             time.sleep(STEP)
         return
     one_pass()
