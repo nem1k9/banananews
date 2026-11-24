@@ -957,5 +957,68 @@
     "log_id": "20261124103712AAC75B0A182441165A2B"
    }
   }
+ },
+ {
+  "id": 139,
+  "at": "2026-11-24T12:55:55+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "v_pub_file~v2-1.7711720817754818566",
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7711720817754834950&upload_token=14abdac1-0579-fef7-bdf1-bb39bb2c2440"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261124205553B6ED6BE55686EF3B7989"
+   }
+  }
+ },
+ {
+  "id": 140,
+  "at": "2026-11-24T12:57:28+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "v_pub_file~v2-1.7711721249809893428",
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7711721249809909812&upload_token=aae94e25-83b6-dc6c-2a32-f70d75535a88"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261124205726B72C12031960540A9F61"
+   }
+  }
+ },
+ {
+  "id": 141,
+  "at": "2026-11-24T12:59:01+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "v_pub_file~v2-1.7711721569193805825",
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7711721569193822209&upload_token=8481931a-fd41-cf9c-d0e2-e506fee8e935"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261124205859661B94D374CCD97202E3"
+   }
+  }
  }
 ]
