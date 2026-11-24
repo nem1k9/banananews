@@ -1,0 +1,23 @@
+[
+ {
+  "id": 112,
+  "image": "tiktok/112.jpg",
+  "lead": "CEO BetBoom Team недоволен продажами стикеров мейджора",
+  "video": "/home/runner/work/banananews/banananews/out/photo_112.mp4",
+  "category": "news"
+ },
+ {
+  "id": 113,
+  "image": "tiktok/113.jpg",
+  "lead": "Virtus.pro выиграла NODWIN Clutch Series #14",
+  "video": "/home/runner/work/banananews/banananews/out/photo_113.mp4",
+  "category": "result"
+ },
+ {
+  "id": 115,
+  "image": "tiktok/115.jpg",
+  "lead": "Valve выпустила обновление CS2",
+  "video": "/home/runner/work/banananews/banananews/out/photo_115.mp4",
+  "category": "news"
+ }
+]
