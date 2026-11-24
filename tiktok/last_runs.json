@@ -1,22 +1,5 @@
 [
  {
-  "id": 18,
-  "at": "2026-11-14T09:01:19+00:00",
-  "privacy": "FOLLOWER_OF_CREATOR",
-  "privacy_options": [
-   "FOLLOWER_OF_CREATOR",
-   "MUTUAL_FOLLOW_FRIENDS",
-   "SELF_ONLY"
-  ],
-  "response": {
-   "error": {
-    "code": "unaudited_client_can_only_post_to_private_accounts",
-    "message": "Please review our integration guidelines at https://developers.tiktok.com/doc/content-sharing-guidelines/",
-    "log_id": "20261114170118780A08D1656011577AFE"
-   }
-  }
- },
- {
   "id": 20,
   "at": "2026-11-14T09:01:19+00:00",
   "privacy": "FOLLOWER_OF_CREATOR",
@@ -1018,6 +1001,27 @@
     "code": "ok",
     "message": "",
     "log_id": "20261124205859661B94D374CCD97202E3"
+   }
+  }
+ },
+ {
+  "id": 151,
+  "at": "2026-11-24T23:16:15+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "v_pub_file~v2-1.7711880424007682066",
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7711880424007698450&upload_token=e146a879-645c-3816-8b6c-eeb84f6c6110"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "202611250716133EAF06EDF037582AD40F"
    }
   }
  }
