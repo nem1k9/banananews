@@ -180,15 +180,35 @@ def post_result(m):
 
     W, L, sc = w["name"], l["name"], f"{w['score']}:{l['score']}"
     nick = NICK.get(W, W)
+    import zlib, random
+    rnd = random.Random(zlib.crc32(m["slug"].encode()))
+    ev = info["event"]
+    big = abs(w["score"] - l["score"]) >= 2
+    WT, LT = f"{tag(W)} <b>{W}</b>", f"{tag(L)} <b>{L}</b>"
     if stage in ("Финал", "Гранд-финал"):
-        lead = f"🏆 {tag(W)} <b>{W}</b> чемпионы {info['event']}!"
-        end = f"🏆 {nick} заслужили трофей\n🤔 Ждал другого чемпиона"
-    elif abs(w["score"] - l["score"]) >= 2:
-        lead = f"💀 {tag(W)} <b>{W}</b> не оставили шансов {tag(L)} <b>{L}</b> {sc}"
-        end = f"🔥 {nick} берут турнир\n😭 {L} пора что-то менять"
+        lead = f"🏆 {WT} чемпионы {ev}!"
+        end = rnd.choice([f"🏆 {nick} заслужили трофей", f"👑 Новый чемпион: {nick}", f"🥇 {nick} забирают {ev}", f"🔥 {nick} на вершине"])
     else:
-        lead = f"🔥 {tag(W)} <b>{W}</b> дожали {tag(L)} <b>{L}</b> {sc}"
-        end = f"🔥 {nick} берут турнир\n🤡 {L} просто не повезло"
+        leads = [
+            ("🔥", f"{WT} обыграли {LT} {sc}"),
+            ("⚡", f"{WT} победили {LT} {sc}"),
+            ("💪", f"{WT} уверенно проходят {LT} {sc}"),
+            ("🎯", f"{WT} выигрывают у {LT} {sc}"),
+            ("🚀", f"{WT} забирают матч у {LT} {sc}"),
+            ("🧨", f"{WT} берут верх над {LT} {sc}"),
+            ("😤", f"{WT} вырывают победу у {LT} {sc}"),
+            ("📈", f"Победа {WT} над {LT}, счёт {sc}"),
+            ("🌟", f"{WT} показали класс против {LT} {sc}"),
+            ("⚔️", f"{WT} в напряжённом матче берут {LT} {sc}"),
+            ("🛡", f"{WT} закрывают матч против {LT} {sc}"),
+            ("🎉", f"{WT} празднуют победу над {LT} {sc}"),
+        ]
+        if big:
+            leads += [("💀", f"{WT} разнесли {LT} {sc}"), ("🔨", f"{WT} без шансов для {LT} {sc}"), ("🌪", f"{WT} снесли {LT} {sc}")]
+        e, t = rnd.choice(leads)
+        lead = f"{e} {t}"
+        ends = [f"{nick} идут дальше на {ev}", f"Хороший старт для {nick}", f"{L} теперь нужно отыгрываться", f"{nick} набирают ход на {ev}", f"Серьёзная заявка от {nick}", f"{L} предстоит сложный путь дальше", f"Следим за {nick} на {ev}"]
+        end = f"{rnd.choice(['✅','📌','👀','🎮','🔝'])} {rnd.choice(ends)}"
     detail = f"{info['event']}{' · ' + stage if stage else ''}"
     if best:
         detail += f"\nMVP: {best['nick']}, {best['k']}/{best['d']}"
