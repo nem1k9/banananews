@@ -145,7 +145,7 @@ def hltv_direct(start, max_age):
 
 STOP = {"the", "and", "for", "with", "after", "over", "from", "into", "says", "cs2", "counter", "strike", "hltv", "org",
         "team", "esports", "gaming", "news", "update", "major", "blast", "pgl", "iem", "esl", "fall", "spring", "season",
-        "2026", "2027", "dust2", "us"}
+        "2026", "2027", "dust2", "us", "singapore", "stage", "round", "premier", "vac", "valve", "nuke", "mirage", "inferno", "ancient", "anubis", "overpass", "train", "vertigo"}
 
 
 def entities(text):
@@ -153,16 +153,18 @@ def entities(text):
     t = text.lower().replace("ё", "е")
     words = set(re.findall(r"[a-z][a-z0-9'._-]{1,}", t)) | set(re.findall(r"\b\d+[:\-]\d+\b", t))
     ru = set(w for w in re.findall(r"[а-я]{5,}", t))
-    return {w.strip("._-'") for w in words if w not in STOP}, {w[:6] for w in ru}
+    words = {w.strip("._-'") for w in words}
+    return {w for w in words if w and w not in STOP}, {w[:6] for w in ru}
 
 
 def similar(a, b):
     (la, ra), (lb, rb) = a, b
     common = la & lb
-    if len(common) >= 3 or (len(common) >= 2 and len(common) / max(1, min(len(la), len(lb))) >= 0.6):
+    score = any(re.fullmatch(r'\d+[:\-]\d+', w) for w in common)  # тот же счёт = тот же матч
+    if len(common) >= 3 or (len(common) >= 2 and score):
         return True
-    rc = ra & rb  # русские основы слов (одинаковые первые 6 букв)
-    return len(common) >= 1 and len(rc) >= 3
+    rc = ra & rb  # русские основы слов: одна пара команд в другом матче/сюжете не считается повтором
+    return len(common) >= 2 and len(rc) >= 7
 
 
 def channel_posts():
