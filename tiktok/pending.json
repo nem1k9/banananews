@@ -1,0 +1,23 @@
+[
+ {
+  "id": 139,
+  "image": "tiktok/139.jpg",
+  "lead": "s1mple рассказал о мотивации перед мейджором",
+  "video": "/home/runner/work/banananews/banananews/out/photo_139.mp4",
+  "category": "quote"
+ },
+ {
+  "id": 140,
+  "image": "tiktok/140.jpg",
+  "lead": "device провёл тяжёлую карту против Imperial",
+  "video": "/home/runner/work/banananews/banananews/out/photo_140.mp4",
+  "category": "news"
+ },
+ {
+  "id": 141,
+  "image": "tiktok/141.jpg",
+  "lead": "Eternal Fire выигрывают у DENDELE 13:8",
+  "video": "/home/runner/work/banananews/banananews/out/photo_141.mp4",
+  "category": "news"
+ }
+]
