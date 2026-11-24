@@ -179,11 +179,17 @@ def post_result(m):
         imgs.append(os.path.join(out, "player.png"))
 
     W, L, sc = w["name"], l["name"], f"{w['score']}:{l['score']}"
+    one_map = None
+    if (info.get("bo") or 1) == 1 and info.get("maps"):  # Bo1: счёт серии 1:0 бессмыслен, показываем счёт карты
+        mp1 = info["maps"][0]
+        a, b = (mp1["s1"], mp1["s2"]) if w is t1 else (mp1["s2"], mp1["s1"])
+        sc, one_map = f"{a}:{b}", mp1["name"]
+        big = abs(a - b) >= 6
     nick = NICK.get(W, W)
     import zlib, random
     rnd = random.Random(zlib.crc32(m["slug"].encode()))
     ev = info["event"]
-    big = abs(w["score"] - l["score"]) >= 2
+    big = abs(w["score"] - l["score"]) >= 2 if not one_map else big
     WT, LT = f"{tag(W)} <b>{W}</b>", f"{tag(L)} <b>{L}</b>"
     if stage in ("Финал", "Гранд-финал"):
         lead = f"🏆 {WT} чемпионы {ev}!"
@@ -210,6 +216,8 @@ def post_result(m):
         ends = [f"{nick} идут дальше на {ev}", f"Хороший старт для {nick}", f"{L} теперь нужно отыгрываться", f"{nick} набирают ход на {ev}", f"Серьёзная заявка от {nick}", f"{L} предстоит сложный путь дальше", f"Следим за {nick} на {ev}"]
         end = f"{rnd.choice(['✅','📌','👀','🎮','🔝'])} {rnd.choice(ends)}"
     detail = f"{info['event']}{' · ' + stage if stage else ''}"
+    if one_map:
+        detail += f" · {one_map}"
     if best:
         detail += f"\nMVP: {best['nick']}, {best['k']}/{best['d']}"
     send("album" if len(imgs) > 1 else "photo", imgs, f"{lead}\n\n<blockquote>{detail}</blockquote>\n\n{end}", key)
