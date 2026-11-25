@@ -1,62 +1,5 @@
 [
  {
-  "id": 20,
-  "at": "2026-11-14T09:01:19+00:00",
-  "privacy": "FOLLOWER_OF_CREATOR",
-  "privacy_options": [
-   "FOLLOWER_OF_CREATOR",
-   "MUTUAL_FOLLOW_FRIENDS",
-   "SELF_ONLY"
-  ],
-  "response": {
-   "error": {
-    "code": "unaudited_client_can_only_post_to_private_accounts",
-    "message": "Please review our integration guidelines at https://developers.tiktok.com/doc/content-sharing-guidelines/",
-    "log_id": "202611141701196C5637B63AD30B5C0618"
-   }
-  }
- },
- {
-  "id": 18,
-  "at": "2026-11-14T09:28:09+00:00",
-  "privacy": "SELF_ONLY",
-  "privacy_options": [
-   "FOLLOWER_OF_CREATOR",
-   "MUTUAL_FOLLOW_FRIENDS",
-   "SELF_ONLY"
-  ],
-  "response": {
-   "data": {
-    "publish_id": "p_pub_url~v2.7707956175388674068"
-   },
-   "error": {
-    "code": "ok",
-    "message": "",
-    "log_id": "202611141728081137C634000EF74576DB"
-   }
-  }
- },
- {
-  "id": 20,
-  "at": "2026-11-14T09:29:40+00:00",
-  "privacy": "SELF_ONLY",
-  "privacy_options": [
-   "FOLLOWER_OF_CREATOR",
-   "MUTUAL_FOLLOW_FRIENDS",
-   "SELF_ONLY"
-  ],
-  "response": {
-   "data": {
-    "publish_id": "p_pub_url~v2.7707956496700721173"
-   },
-   "error": {
-    "code": "ok",
-    "message": "",
-    "log_id": "20261114172939A71A01EE84F2A256FAAF"
-   }
-  }
- },
- {
   "id": 23,
   "at": "2026-11-14T10:53:30+00:00",
   "privacy": "SELF_ONLY",
@@ -1022,6 +965,69 @@
     "code": "ok",
     "message": "",
     "log_id": "202611250716133EAF06EDF037582AD40F"
+   }
+  }
+ },
+ {
+  "id": 171,
+  "at": "2026-11-25T17:36:38+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "v_pub_file~v2-1.7712164182396897332",
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7712164182396913716&upload_token=46a360b6-9921-5d54-e604-c5e0f3dd55b0"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261126013635673F1B89EEC23B81DECF"
+   }
+  }
+ },
+ {
+  "id": 172,
+  "at": "2026-11-25T17:38:10+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7712164566393735176&upload_token=6940fed5-6cb3-f280-77ed-f24840fd348d",
+    "publish_id": "v_pub_file~v2-1.7712164566393718792"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "2026112601380878293E89431F6EDCE6E6"
+   }
+  }
+ },
+ {
+  "id": 182,
+  "at": "2026-11-25T17:39:43+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7712164921391384594&upload_token=61c848b4-3e2f-e955-4aaa-2f162a8eb69d",
+    "publish_id": "v_pub_file~v2-1.7712164921391368210"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261126013941382E51C8F47D21BCE288"
    }
   }
  }
