@@ -1,45 +1,5 @@
 [
  {
-  "id": 23,
-  "at": "2026-11-14T10:53:30+00:00",
-  "privacy": "SELF_ONLY",
-  "privacy_options": [
-   "FOLLOWER_OF_CREATOR",
-   "MUTUAL_FOLLOW_FRIENDS",
-   "SELF_ONLY"
-  ],
-  "response": {
-   "data": {
-    "publish_id": "p_pub_url~v2.7707978185761540114"
-   },
-   "error": {
-    "code": "ok",
-    "message": "",
-    "log_id": "202611141853303AE022A60E345AAD3DB7"
-   }
-  }
- },
- {
-  "id": 25,
-  "at": "2026-11-14T10:55:01+00:00",
-  "privacy": "SELF_ONLY",
-  "privacy_options": [
-   "FOLLOWER_OF_CREATOR",
-   "MUTUAL_FOLLOW_FRIENDS",
-   "SELF_ONLY"
-  ],
-  "response": {
-   "data": {
-    "publish_id": "p_pub_url~v2.7707978569540306952"
-   },
-   "error": {
-    "code": "ok",
-    "message": "",
-    "log_id": "20261114185501F0C9DEB344780B63CD60"
-   }
-  }
- },
- {
   "id": 26,
   "at": "2026-11-14T10:56:32+00:00",
   "privacy": "SELF_ONLY",
@@ -1028,6 +988,48 @@
     "code": "ok",
     "message": "",
     "log_id": "20261126013941382E51C8F47D21BCE288"
+   }
+  }
+ },
+ {
+  "id": 184,
+  "at": "2026-11-26T01:10:53+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "v_pub_file~v2-1.7712281252295886900",
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7712281252295903284&upload_token=2ab39203-9eaa-7fc6-5215-fe29b88b6766"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261126091051B2CA683586D5C19C27C3"
+   }
+  }
+ },
+ {
+  "id": 185,
+  "at": "2026-11-26T01:12:25+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7712281405662054406&upload_token=f2536cd9-296b-3b86-8484-42ba5f83c5b2",
+    "publish_id": "v_pub_file~v2-1.7712281405662038022"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "2026112609122382AA439EBFF6E2A7C5B9"
    }
   }
  }
