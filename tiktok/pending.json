@@ -1,0 +1,23 @@
+[
+ {
+  "id": 211,
+  "image": "tiktok/211.jpg",
+  "lead": "Lynn Vision показали класс против HEROIC 2:0",
+  "video": "/home/runner/work/banananews/banananews/out/photo_211.mp4",
+  "category": "news"
+ },
+ {
+  "id": 212,
+  "image": "tiktok/212.jpg",
+  "lead": "FL1T пожаловался на низкие доходы от стикеров",
+  "video": "/home/runner/work/banananews/banananews/out/photo_212.mp4",
+  "category": "news"
+ },
+ {
+  "id": 213,
+  "image": "tiktok/213.jpg",
+  "lead": "Brollan после вылета с PGL Major Singapore 2026",
+  "video": "/home/runner/work/banananews/banananews/out/photo_213.mp4",
+  "category": "result"
+ }
+]
