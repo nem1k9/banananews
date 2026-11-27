@@ -1,46 +1,5 @@
 [
  {
-  "id": 40,
-  "at": "2026-11-15T09:53:50+00:00",
-  "privacy": "SELF_ONLY",
-  "privacy_options": [
-   "FOLLOWER_OF_CREATOR",
-   "MUTUAL_FOLLOW_FRIENDS",
-   "SELF_ONLY"
-  ],
-  "response": {
-   "data": {
-    "publish_id": "p_pub_url~v2.7708333945615566855"
-   },
-   "error": {
-    "code": "ok",
-    "message": "",
-    "log_id": "20261115175349419A87500D8A81B3771D"
-   }
-  }
- },
- {
-  "id": 41,
-  "at": "2026-11-15T09:55:25+00:00",
-  "privacy": "SELF_ONLY",
-  "privacy_options": [
-   "FOLLOWER_OF_CREATOR",
-   "MUTUAL_FOLLOW_FRIENDS",
-   "SELF_ONLY"
-  ],
-  "response": {
-   "data": {
-    "publish_id": "v_pub_file~v2-1.7708334293277394962",
-    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7708334293277411346&upload_token=07d0a2da-a46c-e87b-26b9-51a165d188da"
-   },
-   "error": {
-    "code": "ok",
-    "message": "",
-    "log_id": "20261115175520B95A5C94B26D75073D31"
-   }
-  }
- },
- {
   "id": 52,
   "at": "2026-11-15T17:24:07+00:00",
   "privacy": "SELF_ONLY",
@@ -1039,6 +998,48 @@
     "code": "ok",
     "message": "",
     "log_id": "20261127210801396BAD065044E1066615"
+   }
+  }
+ },
+ {
+  "id": 218,
+  "at": "2026-11-27T22:20:25+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "v_pub_file~v2-1.7712979136856999944",
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7712979136857016328&upload_token=ab70b37d-1f77-d4ef-e2f9-53a8a2052f36"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "2026112806202346A45AAE8F6D5ED4809A"
+   }
+  }
+ },
+ {
+  "id": 219,
+  "at": "2026-11-27T22:21:58+00:00",
+  "privacy": "SELF_ONLY",
+  "privacy_options": [
+   "FOLLOWER_OF_CREATOR",
+   "MUTUAL_FOLLOW_FRIENDS",
+   "SELF_ONLY"
+  ],
+  "response": {
+   "data": {
+    "publish_id": "v_pub_file~v2-1.7712979758409304071",
+    "upload_url": "https://open-upload-sg.tiktokapis.com/upload?upload_id=7712979758409320455&upload_token=620dc25d-6cb0-fe5c-7348-6eae1a0a75a9"
+   },
+   "error": {
+    "code": "ok",
+    "message": "",
+    "log_id": "20261128062156AB08D6B3DE95BB0D2BC6"
    }
   }
  }
